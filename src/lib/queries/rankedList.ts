@@ -8,7 +8,15 @@ export async function getRankedList(session: SessionClaims) {
 
   const [trackACases, trackBFlags] = await Promise.all([
     db.case.findMany({
-      where: { ...districtFilter, formulaResult: { tier: { not: null } } },
+      where: {
+        ...districtFilter,
+        formulaResult: { tier: { not: null } },
+        // Belt-and-suspenders: computeCase deletes the FormulaResult when a
+        // recompute flips a case to excluded/needs-review, but a case that
+        // is NOT clear or under stricter scrutiny must never be rankable
+        // even if that cleanup were ever skipped.
+        exclusionStatus: { in: ["CLEAR", "STRICTER_SCRUTINY"] },
+      },
       include: { person: true, formulaResult: { include: { governingSection: true } } },
     }),
     db.trackBFlag.findMany({

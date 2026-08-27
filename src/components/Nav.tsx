@@ -15,6 +15,11 @@ export async function Nav() {
       <Link href="/stalled" className="text-neutral-500 hover:text-neutral-900 dark:hover:text-white">
         Stalled
       </Link>
+      {(session.role === "LAWYER" || session.role === "DISTRICT_ADMIN") && (
+        <Link href="/cases/new" className="text-neutral-500 hover:text-neutral-900 dark:hover:text-white">
+          New case
+        </Link>
+      )}
       {session.role === "DISTRICT_ADMIN" && (
         <Link href="/admin" className="text-neutral-500 hover:text-neutral-900 dark:hover:text-white">
           Approvals

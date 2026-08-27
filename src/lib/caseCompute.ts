@@ -67,7 +67,12 @@ export async function computeCase(caseId: string) {
   // Track A only runs if the case is clear or flagged for stricter scrutiny
   // (still ranked, just routed to mandatory review) — never for a hard exclusion.
   let formulaResult = null;
-  if (exclusion.status === "clear" || exclusion.status === "stricter_scrutiny") {
+  if (exclusion.status !== "clear" && exclusion.status !== "stricter_scrutiny") {
+    // Recompute can flip a case from eligible to excluded/needs-review (e.g.
+    // new facts change the picture) — a stale FormulaResult must not linger,
+    // or the ranked list query would still show it as eligible.
+    await db.formulaResult.deleteMany({ where: { caseId } });
+  } else {
     const custodyDays = daysInCustody(dbCase.arrestDate);
     if (caseInput.priorConvictions === null) {
       // Should be unreachable — checkExclusions returns needs_human_review
@@ -108,6 +113,10 @@ export async function computeCase(caseId: string) {
       update: { bailOrderDate: dbCase.bailOrderDate, daysSinceBail: trackB.daysSinceBail },
       create: { caseId, bailOrderDate: dbCase.bailOrderDate, daysSinceBail: trackB.daysSinceBail },
     });
+  } else {
+    // e.g. the person has since been released — a stale flag must not
+    // keep showing up in the Track B list.
+    await db.trackBFlag.deleteMany({ where: { caseId } });
   }
 
   return { exclusion, formulaResult, trackB: { ...trackB, record: trackBFlag } };
