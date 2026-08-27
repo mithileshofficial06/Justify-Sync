@@ -2,18 +2,42 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth/session";
 import { LogoutButton } from "./LogoutButton";
 
+function Logo() {
+  return (
+    <Link href="/" className="flex items-center gap-2">
+      <span className="flex h-7 w-7 items-center justify-center border-2 border-foreground bg-accent font-display text-sm text-white">
+        J
+      </span>
+      <span className="font-display text-sm tracking-tight uppercase">Justify-Sync</span>
+    </Link>
+  );
+}
+
 export async function Nav() {
   const session = await getSession();
-  if (!session) return null;
+
+  if (!session) {
+    return (
+      <nav className="flex items-center gap-6 border-b-2 border-foreground px-4 py-3">
+        <Logo />
+        <span className="ml-auto flex items-center gap-4 font-mono text-xs tracking-widest uppercase">
+          <Link href="/login" className="hover:text-accent">
+            Log in
+          </Link>
+          <Link
+            href="/register"
+            className="border-2 border-foreground bg-foreground px-3 py-1 text-background hover:bg-accent hover:border-accent"
+          >
+            Register →
+          </Link>
+        </span>
+      </nav>
+    );
+  }
 
   return (
     <nav className="flex items-center gap-6 border-b-2 border-foreground px-4 py-3">
-      <Link href="/" className="flex items-center gap-2">
-        <span className="flex h-7 w-7 items-center justify-center border-2 border-foreground bg-accent font-display text-sm text-white">
-          J
-        </span>
-        <span className="font-display text-sm tracking-tight uppercase">Justify-Sync</span>
-      </Link>
+      <Logo />
 
       <div className="hidden items-center gap-5 font-mono text-xs tracking-widest uppercase sm:flex">
         <Link href="/" className="hover:text-accent">

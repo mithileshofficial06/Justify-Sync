@@ -49,6 +49,32 @@ export function LinkButton({ href, children }: { href: string; children: ReactNo
   );
 }
 
+export function StatBlock({
+  value,
+  label,
+  accent,
+}: {
+  value: string;
+  label: string;
+  accent?: boolean;
+}) {
+  return (
+    <div className="border-2 border-foreground p-4">
+      <div className={`font-display text-3xl uppercase sm:text-4xl ${accent ? "text-accent" : ""}`}>{value}</div>
+      <div className="mt-1 font-mono text-[11px] tracking-widest text-foreground/60 uppercase">{label}</div>
+    </div>
+  );
+}
+
+export function SectionLabel({ n, children }: { n: string; children: ReactNode }) {
+  return (
+    <div className="mb-4 flex items-center gap-3">
+      <span className="border-2 border-accent bg-accent px-2 py-0.5 font-mono text-xs text-white">{n}</span>
+      <Label>{children}</Label>
+    </div>
+  );
+}
+
 export function Badge({ tone = "default", children }: { tone?: "default" | "accent"; children: ReactNode }) {
   return (
     <span
