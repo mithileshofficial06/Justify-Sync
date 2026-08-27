@@ -7,31 +7,40 @@ export async function Nav() {
   if (!session) return null;
 
   return (
-    <nav className="flex items-center gap-4 border-b border-neutral-200 px-4 py-3 text-sm dark:border-neutral-800">
-      <span className="font-semibold">Justify-Sync</span>
-      <Link href="/" className="text-neutral-500 hover:text-neutral-900 dark:hover:text-white">
-        Ranked list
+    <nav className="flex items-center gap-6 border-b-2 border-foreground px-4 py-3">
+      <Link href="/" className="flex items-center gap-2">
+        <span className="flex h-7 w-7 items-center justify-center border-2 border-foreground bg-accent font-display text-sm text-white">
+          J
+        </span>
+        <span className="font-display text-sm tracking-tight uppercase">Justify-Sync</span>
       </Link>
-      <Link href="/stalled" className="text-neutral-500 hover:text-neutral-900 dark:hover:text-white">
-        Stalled
-      </Link>
-      {(session.role === "LAWYER" || session.role === "DISTRICT_ADMIN") && (
-        <Link href="/cases/new" className="text-neutral-500 hover:text-neutral-900 dark:hover:text-white">
-          New case
+
+      <div className="hidden items-center gap-5 font-mono text-xs tracking-widest uppercase sm:flex">
+        <Link href="/" className="hover:text-accent">
+          Ranked list
         </Link>
-      )}
-      {session.role === "DISTRICT_ADMIN" && (
-        <Link href="/admin" className="text-neutral-500 hover:text-neutral-900 dark:hover:text-white">
-          Approvals
+        <Link href="/stalled" className="hover:text-accent">
+          Stalled
         </Link>
-      )}
-      {session.role === "STATE_ADMIN" && (
-        <Link href="/admin/state" className="text-neutral-500 hover:text-neutral-900 dark:hover:text-white">
-          State overview
-        </Link>
-      )}
-      <span className="ml-auto flex items-center gap-3">
-        <span className="text-neutral-400">{session.role}</span>
+        {(session.role === "LAWYER" || session.role === "DISTRICT_ADMIN") && (
+          <Link href="/cases/new" className="hover:text-accent">
+            New case
+          </Link>
+        )}
+        {session.role === "DISTRICT_ADMIN" && (
+          <Link href="/admin" className="hover:text-accent">
+            Approvals
+          </Link>
+        )}
+        {session.role === "STATE_ADMIN" && (
+          <Link href="/admin/state" className="hover:text-accent">
+            State overview
+          </Link>
+        )}
+      </div>
+
+      <span className="ml-auto flex items-center gap-4 font-mono text-xs tracking-widest uppercase">
+        <span className="border-2 border-foreground px-2 py-0.5">{session.role}</span>
         <LogoutButton />
       </span>
     </nav>

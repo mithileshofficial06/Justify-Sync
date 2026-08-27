@@ -11,7 +11,7 @@ export function LogoutButton() {
         router.push("/login");
         router.refresh();
       }}
-      className="text-sm text-neutral-500 hover:text-neutral-900 dark:hover:text-white"
+      className="border-2 border-foreground px-2 py-0.5 hover:bg-foreground hover:text-background"
     >
       Log out
     </button>

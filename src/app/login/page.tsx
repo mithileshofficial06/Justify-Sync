@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { H1, Label, Button } from "@/components/ui";
 
 type Step = "credentials" | "otp";
 
@@ -58,63 +59,59 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4">
-      <h1 className="mb-1 text-xl font-semibold">Justify-Sync</h1>
-      <p className="mb-6 text-sm text-neutral-500">DLSA lawyer login</p>
+    <main className="flex flex-1 items-center justify-center px-4 py-16">
+      <div className="w-full max-w-sm border-2 border-foreground bg-panel p-6">
+        <Label>DLSA Lawyer Access</Label>
+        <div className="mt-1 mb-6">
+          <H1>Log in</H1>
+        </div>
 
-      {step === "credentials" ? (
-        <form onSubmit={submitCredentials} className="flex flex-col gap-3">
-          <label className="flex flex-col gap-1 text-sm">
-            Bar Council enrolment no.
+        {step === "credentials" ? (
+          <form onSubmit={submitCredentials} className="flex flex-col gap-4">
+            <label className="flex flex-col gap-1">
+              <Label>Bar Council enrolment no.</Label>
+              <input
+                className="border-2 border-foreground bg-background px-3 py-2 font-mono text-sm outline-none focus:border-accent"
+                placeholder="TN/1234/2015"
+                value={barEnrolmentNo}
+                onChange={(e) => setBarEnrolmentNo(e.target.value)}
+                required
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <Label>Password</Label>
+              <input
+                type="password"
+                className="border-2 border-foreground bg-background px-3 py-2 font-mono text-sm outline-none focus:border-accent"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </label>
+            {error && <p className="font-mono text-xs text-accent">{error}</p>}
+            <Button type="submit" disabled={loading} className="mt-2 w-full">
+              {loading ? "Checking..." : "Continue"}
+            </Button>
+          </form>
+        ) : (
+          <form onSubmit={submitOtp} className="flex flex-col gap-4">
+            <p className="font-mono text-xs text-foreground/60 uppercase">
+              Enter the 6-digit OTP sent to your registered mobile number. In dev without Twilio configured, check the server console.
+            </p>
             <input
-              className="rounded border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
-              placeholder="TN/1234/2015"
-              value={barEnrolmentNo}
-              onChange={(e) => setBarEnrolmentNo(e.target.value)}
+              className="border-2 border-foreground bg-background px-3 py-2 font-mono text-lg tracking-[0.5em] outline-none focus:border-accent"
+              maxLength={6}
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
               required
             />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            Password
-            <input
-              type="password"
-              className="rounded border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </label>
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-2 rounded bg-neutral-900 px-3 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
-          >
-            {loading ? "Checking..." : "Continue"}
-          </button>
-        </form>
-      ) : (
-        <form onSubmit={submitOtp} className="flex flex-col gap-3">
-          <p className="text-sm text-neutral-500">
-            Enter the 6-digit OTP sent to your registered mobile number. (In dev without Twilio configured, check the server console for the code.)
-          </p>
-          <input
-            className="rounded border border-neutral-300 px-3 py-2 tracking-widest dark:border-neutral-700 dark:bg-neutral-900"
-            maxLength={6}
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-            required
-          />
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-2 rounded bg-neutral-900 px-3 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
-          >
-            {loading ? "Verifying..." : "Verify & log in"}
-          </button>
-        </form>
-      )}
+            {error && <p className="font-mono text-xs text-accent">{error}</p>}
+            <Button type="submit" disabled={loading} className="mt-2 w-full">
+              {loading ? "Verifying..." : "Verify & log in"}
+            </Button>
+          </form>
+        )}
+      </div>
     </main>
   );
 }

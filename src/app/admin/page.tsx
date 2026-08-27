@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { getPendingLawyers } from "@/lib/queries/pendingLawyers";
 import { ApproveLawyerButtons } from "@/components/ApproveLawyerButtons";
+import { Label, H1 } from "@/components/ui";
 
 export default async function AdminApprovalsPage() {
   const session = await getSession();
@@ -11,27 +12,29 @@ export default async function AdminApprovalsPage() {
   const pending = await getPendingLawyers(session);
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6">
-      <h1 className="mb-1 text-lg font-semibold">Lawyer registrations awaiting approval</h1>
-      <p className="mb-6 text-sm text-neutral-500">
-        Confirm each applicant is a genuine, currently-assigned DLSA/Legal Aid Defence Counsel for this district before approving (v5 §5.2).
+    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
+      <Label>District admin</Label>
+      <div className="mt-1 mb-2">
+        <H1>Pending approvals</H1>
+      </div>
+      <p className="mb-8 max-w-xl font-mono text-xs text-foreground/60 uppercase">
+        Confirm each applicant is a genuine, currently-assigned DLSA/Legal Aid Defence Counsel before approving.
       </p>
 
       {pending.length === 0 ? (
-        <p className="text-sm text-neutral-400">No pending registrations.</p>
+        <p className="font-mono text-xs text-foreground/40 uppercase">No pending registrations.</p>
       ) : (
-        <ul className="flex flex-col gap-3 text-sm">
+        <ul className="flex flex-col gap-3">
           {pending.map((u) => (
-            <li
-              key={u.id}
-              className="flex items-center justify-between rounded border border-neutral-200 p-3 dark:border-neutral-800"
-            >
+            <li key={u.id} className="flex items-center justify-between border-2 border-foreground bg-panel p-4">
               <div>
-                <p className="font-medium">{u.fullName}</p>
-                <p className="text-neutral-500">
+                <p className="font-display text-sm uppercase">{u.fullName}</p>
+                <p className="mt-1 font-mono text-xs text-foreground/60">
                   {u.barEnrolmentNo} · {u.email} · {u.mobileNumber}
                 </p>
-                <p className="text-xs text-neutral-400">Registered {u.createdAt.toDateString()}</p>
+                <p className="mt-0.5 font-mono text-[10px] text-foreground/40 uppercase">
+                  Registered {u.createdAt.toDateString()}
+                </p>
               </div>
               <ApproveLawyerButtons userId={u.id} />
             </li>

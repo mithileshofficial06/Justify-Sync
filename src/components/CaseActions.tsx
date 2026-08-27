@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button, Label, H2 } from "@/components/ui";
 
 const STATUSES = ["FILED", "HEARD", "BAIL_GRANTED", "RELEASED"] as const;
 
@@ -28,16 +29,20 @@ export function CaseActions({ caseId }: { caseId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded border border-neutral-200 p-4 text-sm dark:border-neutral-800">
+    <div className="flex flex-col gap-6 border-2 border-foreground p-5">
+      <div className="mb-1">
+        <H2>Actions</H2>
+      </div>
+
       <div>
-        <label className="mb-1 block font-medium">1. Extract facts from a charge sheet</label>
+        <Label>1. Extract facts from a charge sheet</Label>
         <textarea
-          className="h-32 w-full rounded border border-neutral-300 p-2 dark:border-neutral-700 dark:bg-neutral-900"
+          className="mt-1 h-32 w-full border-2 border-foreground bg-background p-2 font-mono text-xs outline-none focus:border-accent"
           placeholder="Paste charge sheet text here..."
           value={documentText}
           onChange={(e) => setDocumentText(e.target.value)}
         />
-        <button
+        <Button
           disabled={busy !== null || documentText.length < 20}
           onClick={() =>
             run("Extract", () =>
@@ -48,52 +53,54 @@ export function CaseActions({ caseId }: { caseId: string }) {
               })
             )
           }
-          className="mt-2 rounded bg-neutral-900 px-3 py-1.5 text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
+          className="mt-2"
         >
           {busy === "Extract" ? "Extracting..." : "Extract"}
-        </button>
+        </Button>
       </div>
 
-      <div className="flex flex-wrap gap-2 border-t border-neutral-200 pt-4 dark:border-neutral-800">
-        <button
+      <div className="flex flex-wrap gap-2 border-t-2 border-foreground pt-5">
+        <Button
+          variant="outline"
           disabled={busy !== null}
           onClick={() => run("Compute", () => fetch(`/api/cases/${caseId}/compute`, { method: "POST" }))}
-          className="rounded border border-neutral-300 px-3 py-1.5 disabled:opacity-50 dark:border-neutral-700"
         >
           2. Compute eligibility
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="outline"
           disabled={busy !== null}
           onClick={() => run("Draft", () => fetch(`/api/cases/${caseId}/draft`, { method: "POST" }))}
-          className="rounded border border-neutral-300 px-3 py-1.5 disabled:opacity-50 dark:border-neutral-700"
         >
           3. Draft application
-        </button>
+        </Button>
       </div>
 
-      <div className="flex flex-wrap gap-2 border-t border-neutral-200 pt-4 dark:border-neutral-800">
-        <span className="w-full font-medium">4. Update case status (lawyer sign-off)</span>
-        {STATUSES.map((status) => (
-          <button
-            key={status}
-            disabled={busy !== null}
-            onClick={() =>
-              run(`Status:${status}`, () =>
-                fetch(`/api/cases/${caseId}/status`, {
-                  method: "PATCH",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ status }),
-                })
-              )
-            }
-            className="rounded border border-neutral-300 px-3 py-1.5 text-xs disabled:opacity-50 dark:border-neutral-700"
-          >
-            {status}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center gap-2 border-t-2 border-foreground pt-5">
+        <Label>4. Update case status (lawyer sign-off)</Label>
+        <div className="flex w-full flex-wrap gap-2">
+          {STATUSES.map((status) => (
+            <Button
+              key={status}
+              variant="outline"
+              disabled={busy !== null}
+              onClick={() =>
+                run(`Status:${status}`, () =>
+                  fetch(`/api/cases/${caseId}/status`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ status }),
+                  })
+                )
+              }
+            >
+              {status}
+            </Button>
+          ))}
+        </div>
       </div>
 
-      {message && <p className="text-xs text-neutral-500">{message}</p>}
+      {message && <p className="font-mono text-xs text-foreground/60">{message}</p>}
     </div>
   );
 }

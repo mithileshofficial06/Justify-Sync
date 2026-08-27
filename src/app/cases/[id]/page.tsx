@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { getCaseDetail, ForbiddenError, NotFoundError } from "@/lib/queries/caseDetail";
 import { CaseActions } from "@/components/CaseActions";
+import { Label, H1, H2, Badge, Panel } from "@/components/ui";
 
 export default async function CaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -22,73 +23,82 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
   const tb = dbCase.trackBFlag;
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6">
-      <h1 className="mb-1 text-lg font-semibold">{dbCase.person.nameVariants[0] ?? "Unknown"}</h1>
-      <p className="mb-6 text-sm text-neutral-500">
-        Status: {dbCase.caseStatus} · Exclusion: {dbCase.exclusionStatus}
-        {dbCase.exclusionReason && <span> — {dbCase.exclusionReason}</span>}
-      </p>
+    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
+      <Label>Case file</Label>
+      <div className="mt-1 mb-2">
+        <H1>{dbCase.person.nameVariants[0] ?? "Unknown"}</H1>
+      </div>
+      <div className="mb-8 flex flex-wrap items-center gap-2">
+        <Badge>{dbCase.caseStatus}</Badge>
+        <Badge tone={dbCase.exclusionStatus === "CLEAR" ? "default" : "accent"}>{dbCase.exclusionStatus}</Badge>
+        {dbCase.exclusionReason && (
+          <span className="font-mono text-xs text-foreground/60">{dbCase.exclusionReason}</span>
+        )}
+      </div>
 
-      <section className="mb-6 rounded border border-neutral-200 p-4 text-sm dark:border-neutral-800">
-        <h2 className="mb-3 font-medium">Explainability — check the arithmetic yourself</h2>
+      <Panel className="mb-8 p-5">
+        <div className="mb-4">
+          <H2>Explainability</H2>
+        </div>
         {fr ? (
-          <dl className="grid grid-cols-2 gap-y-1">
-            <dt className="text-neutral-500">Governing section</dt>
-            <dd>{fr.governingSection.code}</dd>
-            <dt className="text-neutral-500">Applicable fraction</dt>
-            <dd>{Math.abs(fr.applicableFraction - 1 / 3) < 0.001 ? "1/3 (no priors)" : "1/2 (has prior conviction)"}</dd>
-            <dt className="text-neutral-500">Threshold (days)</dt>
-            <dd>{fr.thresholdDays}</dd>
-            <dt className="text-neutral-500">Days in custody</dt>
-            <dd>{fr.daysInCustody}</dd>
-            <dt className="text-neutral-500">Tier</dt>
-            <dd className="font-medium">{fr.tier ?? "not yet eligible"}</dd>
-            <dt className="text-neutral-500">Overdue days</dt>
-            <dd className="font-medium">{fr.overdueDays ?? "—"}</dd>
+          <dl className="grid grid-cols-2 gap-y-3 font-mono text-sm">
+            <Field label="Governing section" value={fr.governingSection.code} />
+            <Field
+              label="Applicable fraction"
+              value={Math.abs(fr.applicableFraction - 1 / 3) < 0.001 ? "1/3 (no priors)" : "1/2 (has prior)"}
+            />
+            <Field label="Threshold (days)" value={String(fr.thresholdDays)} />
+            <Field label="Days in custody" value={String(fr.daysInCustody)} />
+            <Field label="Tier" value={fr.tier ?? "not yet eligible"} emphasize />
+            <Field label="Overdue days" value={fr.overdueDays !== null ? String(fr.overdueDays) : "—"} emphasize />
           </dl>
         ) : (
-          <p className="text-neutral-400">Not computed yet — run &quot;Compute eligibility&quot; below.</p>
+          <p className="font-mono text-xs text-foreground/40 uppercase">Not computed yet — run &quot;Compute eligibility&quot; below.</p>
         )}
 
         {tb && (
-          <div className="mt-4 border-t border-neutral-200 pt-3 dark:border-neutral-800">
-            <p className="font-medium">Track B — surety failure flag</p>
-            <p className="text-neutral-500">
+          <div className="mt-5 border-t-2 border-foreground pt-4">
+            <p className="mb-1 font-mono text-xs tracking-widest uppercase">Track B — surety failure flag</p>
+            <p className="font-mono text-sm">
               Bail order: {tb.bailOrderDate?.toDateString() ?? "unknown"} · Days since: {tb.daysSinceBail ?? "unknown"}
             </p>
           </div>
         )}
-      </section>
+      </Panel>
 
-      <section className="mb-6">
-        <h2 className="mb-2 text-sm font-medium">Extracted facts (grounded)</h2>
+      <section className="mb-8">
+        <div className="mb-3 border-b-2 border-foreground pb-2">
+          <H2>Extracted facts (grounded)</H2>
+        </div>
         {dbCase.extractedFacts.length === 0 ? (
-          <p className="text-sm text-neutral-400">None yet.</p>
+          <p className="font-mono text-xs text-foreground/40 uppercase">None yet.</p>
         ) : (
-          <ul className="flex flex-col gap-2 text-sm">
+          <ul className="flex flex-col gap-2">
             {dbCase.extractedFacts.map((f) => (
-              <li key={f.id} className="rounded border border-neutral-200 p-2 dark:border-neutral-800">
-                <p>
-                  <span className="font-medium">{f.fieldName}</span>: {f.value}{" "}
-                  <span className={f.confidence >= 0.7 ? "text-green-600" : "text-amber-600"}>
+              <li key={f.id} className="border-2 border-foreground p-3">
+                <p className="font-mono text-sm">
+                  <span className="font-bold">{f.fieldName}</span>: {f.value}{" "}
+                  <span className={f.confidence >= 0.7 ? "text-green-700" : "text-accent"}>
                     (confidence {f.confidence.toFixed(1)})
                   </span>
                 </p>
-                <p className="mt-1 text-xs text-neutral-500">&quot;{f.sourceSentence}&quot;</p>
+                <p className="mt-1 font-mono text-xs text-foreground/50">&quot;{f.sourceSentence}&quot;</p>
               </li>
             ))}
           </ul>
         )}
       </section>
 
-      <section className="mb-6">
-        <h2 className="mb-2 text-sm font-medium">Drafted applications</h2>
+      <section className="mb-8">
+        <div className="mb-3 border-b-2 border-foreground pb-2">
+          <H2>Drafted applications</H2>
+        </div>
         {dbCase.applications.length === 0 ? (
-          <p className="text-sm text-neutral-400">None yet.</p>
+          <p className="font-mono text-xs text-foreground/40 uppercase">None yet.</p>
         ) : (
           <div className="flex flex-col gap-3">
             {dbCase.applications.map((a) => (
-              <pre key={a.id} className="whitespace-pre-wrap rounded border border-neutral-200 p-3 text-xs dark:border-neutral-800">
+              <pre key={a.id} className="border-2 border-foreground bg-panel p-4 font-mono text-xs whitespace-pre-wrap">
                 {a.draftText}
               </pre>
             ))}
@@ -98,5 +108,14 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
 
       <CaseActions caseId={dbCase.id} />
     </main>
+  );
+}
+
+function Field({ label, value, emphasize }: { label: string; value: string; emphasize?: boolean }) {
+  return (
+    <>
+      <dt className="text-foreground/50 uppercase">{label}</dt>
+      <dd className={emphasize ? "text-lg font-bold" : ""}>{value}</dd>
+    </>
   );
 }

@@ -26,14 +26,14 @@ export function ApproveLawyerButtons({ userId }: { userId: string }) {
       <button
         disabled={busy}
         onClick={() => decide("approve")}
-        className="rounded bg-green-700 px-3 py-1 text-xs text-white disabled:opacity-50"
+        className="border-2 border-foreground bg-foreground px-3 py-1 font-mono text-xs tracking-widest text-background uppercase hover:bg-green-700 hover:border-green-700 disabled:opacity-50"
       >
         Approve
       </button>
       <button
         disabled={busy}
         onClick={() => decide("reject")}
-        className="rounded bg-red-700 px-3 py-1 text-xs text-white disabled:opacity-50"
+        className="border-2 border-accent px-3 py-1 font-mono text-xs tracking-widest text-accent uppercase hover:bg-accent hover:text-white disabled:opacity-50"
       >
         Reject
       </button>
