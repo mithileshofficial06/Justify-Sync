@@ -1,0 +1,228 @@
+// Data model per v5 §6, running on Supabase Postgres.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  LAWYER
+  DISTRICT_ADMIN
+  STATE_ADMIN
+  REVIEWER
+}
+
+enum UserStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  REJECTED
+}
+
+enum PendingCaseFlag {
+  NONE
+  CONFIRMED_MULTI
+  UNKNOWN
+}
+
+enum ExclusionStatus {
+  CLEAR
+  EXCLUDED
+  STRICTER_SCRUTINY
+  NEEDS_HUMAN_REVIEW
+}
+
+enum Tier {
+  TIER_1
+  TIER_2
+}
+
+enum CaseStatus {
+  IDENTIFIED
+  DELIVERED
+  FILED
+  HEARD
+  BAIL_GRANTED
+  RELEASED
+}
+
+enum StatusSource {
+  SYSTEM
+  ECOURTS
+  LAWYER
+}
+
+// --- v5 §5: DLSA lawyer authentication ---
+model User {
+  id            String     @id @default(uuid())
+  fullName      String
+  barEnrolmentNo String    @unique // e.g. "TN/1234/2015"
+  role          UserRole
+  districtId    String?
+  district      District?  @relation(fields: [districtId], references: [id])
+  email         String     @unique
+  mobileNumber  String
+  passwordHash  String
+  otpSecret     String?
+  status        UserStatus @default(PENDING_VERIFICATION)
+  createdAt     DateTime   @default(now())
+
+  reviewedFacts    ExtractedFact[]     @relation("ReviewedBy")
+  statusEvents     CaseStatusEvent[]
+  auditLogEntries  AuditLog[]
+
+  @@index([districtId])
+}
+
+model District {
+  id          String @id @default(uuid())
+  name        String
+  state       String
+  slsaContact String?
+
+  users User[]
+  cases Case[]
+}
+
+// --- Entity resolution layer (v4 Flaw #18) ---
+model Person {
+  id                String   @id @default(uuid())
+  nameVariants      String[]
+  approxAge         Int?
+  fuzzyMatchClusterId String?
+
+  cases Case[]
+}
+
+model KnowledgeBaseSection {
+  id              String  @id // e.g. "IPC_325", "BNS_117_2"
+  code            String
+  law             String  // "IPC" | "BNS" | state act name
+  maxSentenceDays Int
+  isDeathOrLife   Boolean @default(false)
+  isGraded        Boolean @default(false)
+  version         String
+  citation        String?
+  notes           String?
+
+  formulaResults FormulaResult[]
+}
+
+model Case {
+  id                String          @id @default(uuid())
+  personId          String
+  person            Person          @relation(fields: [personId], references: [id])
+  districtId        String
+  district          District        @relation(fields: [districtId], references: [id])
+
+  arrestDate        DateTime
+  chargedSectionIds String[]
+  custodyStatus     String          // "in_custody" | "released"
+  bailGranted       Boolean         @default(false)
+  bailOrderDate     DateTime?
+  isJuvenile        Boolean         @default(false)
+  pendingCaseFlag   PendingCaseFlag @default(UNKNOWN)
+  specialActFlag    Boolean         @default(false)
+  exclusionStatus   ExclusionStatus @default(CLEAR)
+  exclusionReason   String?
+
+  caseStatus        CaseStatus      @default(IDENTIFIED)
+  statusUpdatedAt   DateTime        @default(now())
+
+  createdAt         DateTime        @default(now())
+
+  extractedFacts     ExtractedFact[]
+  formulaResult      FormulaResult?
+  trackBFlag         TrackBFlag?
+  applications        Application[]
+  statusEvents        CaseStatusEvent[]
+
+  @@index([districtId])
+  @@index([caseStatus])
+}
+
+// --- AI extraction (v5 Stage 3), grounded ---
+model ExtractedFact {
+  id             String   @id @default(uuid())
+  caseId         String
+  case           Case     @relation(fields: [caseId], references: [id])
+  fieldName      String
+  value          String
+  sourceSentence String   // grounding — discarded if this can't be traced (v4 Flaw #6)
+  confidence     Float
+  extractedAt    DateTime @default(now())
+
+  reviewedById   String?
+  reviewedBy     User?    @relation("ReviewedBy", fields: [reviewedById], references: [id])
+
+  @@index([caseId])
+}
+
+// --- Track A: fixed-formula eligibility (v5 Stage 5) ---
+model FormulaResult {
+  id                  String   @id @default(uuid())
+  caseId              String   @unique
+  case                Case     @relation(fields: [caseId], references: [id])
+  governingSectionId  String
+  governingSection    KnowledgeBaseSection @relation(fields: [governingSectionId], references: [id])
+  applicableFraction  Float
+  thresholdDays       Int
+  daysInCustody       Int
+  tier                Tier?
+  overdueDays         Int?
+  computedAt          DateTime @default(now())
+}
+
+// --- Track B: surety-failure detection (v5 Stage 6) ---
+model TrackBFlag {
+  id            String   @id @default(uuid())
+  caseId        String   @unique
+  case          Case     @relation(fields: [caseId], references: [id])
+  bailOrderDate DateTime?
+  daysSinceBail Int?
+  flaggedAt     DateTime @default(now())
+}
+
+// --- AI-drafted filings (v5 Stage 8) ---
+model Application {
+  id          String   @id @default(uuid())
+  caseId      String
+  case        Case     @relation(fields: [caseId], references: [id])
+  type        String   // "release" | "surety"
+  draftText   String
+  generatedAt DateTime @default(now())
+}
+
+// --- Outcome tracking (v5 Stage 11) ---
+model CaseStatusEvent {
+  id           String       @id @default(uuid())
+  caseId       String
+  case         Case         @relation(fields: [caseId], references: [id])
+  status       CaseStatus
+  setByUserId  String?
+  setByUser    User?        @relation(fields: [setByUserId], references: [id])
+  source       StatusSource
+  eventTime    DateTime     @default(now())
+
+  @@index([caseId])
+}
+
+// --- Audit trail (v5 §5.5 / Stage 13) ---
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorUserId String?
+  actor      User?    @relation(fields: [actorUserId], references: [id])
+  action     String   // "login" | "view_case" | "approve" | "decline_file" | ...
+  entity     String
+  entityId   String?
+  ipAddress  String?
+  timestamp  DateTime @default(now())
+
+  @@index([actorUserId])
+  @@index([entity, entityId])
+}

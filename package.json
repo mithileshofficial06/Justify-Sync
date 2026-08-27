@@ -6,10 +6,17 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
+    "@prisma/client": "7.10.0",
+    "@supabase/supabase-js": "^2.112.4",
+    "argon2": "^0.45.1",
+    "jose": "^6.2.10",
     "next": "16.3.3",
+    "prisma": "7.10.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
@@ -21,6 +28,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.3",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.11"
   }
 }
