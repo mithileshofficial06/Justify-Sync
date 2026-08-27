@@ -13,7 +13,7 @@
  */
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../src/lib/auth/password";
-import { PILOT_DISTRICT_ID } from "./seed";
+import { PILOT_DISTRICT_ID } from "./constants";
 
 const prisma = new PrismaClient();
 

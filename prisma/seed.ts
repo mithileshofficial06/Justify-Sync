@@ -1,12 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import { sections } from "./seedData/sections";
+import { PILOT_DISTRICT_ID } from "./constants";
 
 const prisma = new PrismaClient();
-
-// A single starting district so the app has somewhere for the first
-// registration and bootstrap admin to attach to (v5 Stage 0). Rename or
-// add more via the District table once real DLSA districts are onboarded.
-export const PILOT_DISTRICT_ID = "pilot-district";
 
 async function main() {
   await prisma.district.upsert({
