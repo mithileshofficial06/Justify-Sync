@@ -15,7 +15,7 @@ const registerSchema = z.object({
   barEnrolmentNo: z.string().regex(/^[A-Z]{2}\/\d{1,10}\/\d{4}$/, {
     message: "Expected format STATE/NUMBER/YEAR, e.g. TN/1234/2015",
   }),
-  districtId: z.string().uuid(),
+  districtId: z.string().min(1), // Prisma default() ids are UUIDs, but seeded/manual ones (e.g. "pilot-district") aren't
   mobileNumber: z.string().min(8),
   email: z.string().email(),
   password: z.string().min(10),

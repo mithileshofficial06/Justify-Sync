@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { H1, Label, Button } from "@/components/ui";
 
 type Step = "credentials" | "otp";
@@ -92,6 +93,12 @@ export default function LoginPage() {
             <Button type="submit" disabled={loading} className="mt-2 w-full">
               {loading ? "Checking..." : "Continue"}
             </Button>
+            <Link
+              href="/register"
+              className="text-center font-mono text-xs tracking-widest uppercase underline hover:text-accent"
+            >
+              New DLSA lawyer? Register →
+            </Link>
           </form>
         ) : (
           <form onSubmit={submitOtp} className="flex flex-col gap-4">
