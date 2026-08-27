@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
+import { storeExtractedFacts } from "@/lib/extractedFactStore";
 import { logAudit } from "@/lib/audit";
 
 /**
@@ -73,15 +74,15 @@ export async function POST(
   }
 
   if (priorConvictions !== undefined) {
-    await db.extractedFact.create({
-      data: {
+    await storeExtractedFacts([
+      {
         caseId: id,
         fieldName: "priorConvictions",
         value: String(priorConvictions),
         sourceSentence: `Manually confirmed by ${session.role.toLowerCase()} (user ${session.userId}) via override — not from a document.`,
         confidence: 1.0,
       },
-    });
+    ]);
   }
 
   await logAudit({

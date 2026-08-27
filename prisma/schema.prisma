@@ -73,6 +73,8 @@ model User {
   otpExpiresAt  DateTime?
   failedLoginAttempts Int      @default(0)
   lockedUntil         DateTime? // v5 §5.3: 5 failed attempts -> 15 min lockout
+  passwordResetTokenHash String?
+  passwordResetExpiresAt DateTime?
   status        UserStatus @default(PENDING_VERIFICATION)
   createdAt     DateTime   @default(now())
 

@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import type { SessionClaims } from "@/lib/auth/jwt";
 import { findPotentialMatches, type PotentialMatch } from "@/lib/entityResolution";
+import { decryptField } from "@/lib/crypto";
 
 export class ForbiddenError extends Error {}
 export class NotFoundError extends Error {}
@@ -38,5 +39,11 @@ export async function getCaseDetail(caseId: string, session: SessionClaims) {
     );
   }
 
-  return { ...dbCase, potentialMatches };
+  const extractedFacts = dbCase.extractedFacts.map((f) => ({
+    ...f,
+    value: decryptField(f.value),
+    sourceSentence: decryptField(f.sourceSentence),
+  }));
+
+  return { ...dbCase, extractedFacts, potentialMatches };
 }

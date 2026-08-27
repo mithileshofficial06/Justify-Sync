@@ -19,6 +19,7 @@ import { extractFactsWithSelfCheck } from "../src/lib/ai/extraction";
 import { buildCaseUpdateFromFacts } from "../src/lib/ai/applyExtraction";
 import { computeCase } from "../src/lib/caseCompute";
 import { draftApplication } from "../src/lib/ai/drafting";
+import { storeExtractedFacts } from "../src/lib/extractedFactStore";
 import { PILOT_DISTRICT_ID } from "./constants";
 
 const prisma = new PrismaClient();
@@ -51,15 +52,15 @@ async function main() {
     console.log(`Created case ${dbCase.id} for ${c.personName}`);
 
     const facts = await extractFactsWithSelfCheck(c.chargeSheetText);
-    await prisma.extractedFact.createMany({
-      data: facts.map((f) => ({
+    await storeExtractedFacts(
+      facts.map((f) => ({
         caseId: dbCase.id,
         fieldName: f.fieldName,
         value: f.value,
         sourceSentence: f.sourceSentence,
         confidence: f.confidence,
-      })),
-    });
+      }))
+    );
     const caseUpdate = buildCaseUpdateFromFacts(facts);
     if (Object.keys(caseUpdate).length > 0) {
       await prisma.case.update({ where: { id: dbCase.id }, data: caseUpdate });

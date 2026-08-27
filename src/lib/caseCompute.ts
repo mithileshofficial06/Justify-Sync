@@ -5,6 +5,7 @@ import { daysInCustody } from "@/lib/engine/custody";
 import { classifyTier } from "@/lib/engine/threshold";
 import { checkSuretyFailure } from "@/lib/engine/trackB";
 import type { CaseInput, Section } from "@/lib/engine/types";
+import { getLatestExtractedFact } from "@/lib/extractedFactStore";
 
 /**
  * v5 Stages 4-7 wired to real data: exclusions checked first, then Track A
@@ -29,10 +30,7 @@ export async function computeCase(caseId: string) {
   // purpose — it must come from a grounded ExtractedFact (Stage 3), never
   // be silently assumed. Missing/low-confidence stays null -> exclusions
   // routes it to needs_human_review rather than guessing "no priors".
-  const priorConvictionsFact = await db.extractedFact.findFirst({
-    where: { caseId, fieldName: "priorConvictions", confidence: { gte: 0.7 } },
-    orderBy: { extractedAt: "desc" },
-  });
+  const priorConvictionsFact = await getLatestExtractedFact(caseId, "priorConvictions", 0.7);
   const priorConvictions =
     priorConvictionsFact?.value === "true"
       ? true

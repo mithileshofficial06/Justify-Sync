@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
 import { extractFactsWithSelfCheck } from "@/lib/ai/extraction";
 import { buildCaseUpdateFromFacts } from "@/lib/ai/applyExtraction";
+import { storeExtractedFacts } from "@/lib/extractedFactStore";
 import { logAudit } from "@/lib/audit";
 
 const extractSchema = z.object({
@@ -43,15 +44,15 @@ export async function POST(
 
   const facts = await extractFactsWithSelfCheck(parsed.data.documentText);
 
-  await db.extractedFact.createMany({
-    data: facts.map((f) => ({
+  await storeExtractedFacts(
+    facts.map((f) => ({
       caseId: id,
       fieldName: f.fieldName,
       value: f.value,
       sourceSentence: f.sourceSentence,
       confidence: f.confidence,
-    })),
-  });
+    }))
+  );
 
   const caseUpdate = buildCaseUpdateFromFacts(facts);
   if (Object.keys(caseUpdate).length > 0) {

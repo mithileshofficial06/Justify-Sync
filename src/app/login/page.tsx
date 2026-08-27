@@ -94,6 +94,12 @@ export default function LoginPage() {
               {loading ? "Checking..." : "Continue"}
             </Button>
             <Link
+              href="/forgot-password"
+              className="text-center font-mono text-xs tracking-widest uppercase underline hover:text-accent"
+            >
+              Forgot password? →
+            </Link>
+            <Link
               href="/register"
               className="text-center font-mono text-xs tracking-widest uppercase underline hover:text-accent"
             >
