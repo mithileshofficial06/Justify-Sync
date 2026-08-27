@@ -46,6 +46,9 @@ export async function Nav() {
         <Link href="/stalled" className="hover:text-accent">
           Stalled
         </Link>
+        <Link href="/needs-review" className="hover:text-accent">
+          Needs review
+        </Link>
         {(session.role === "LAWYER" || session.role === "DISTRICT_ADMIN") && (
           <Link href="/cases/new" className="hover:text-accent">
             New case

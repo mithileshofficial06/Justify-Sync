@@ -128,7 +128,10 @@ function Table({ rows }: { rows: Awaited<ReturnType<typeof getRankedList>>["trac
               <Td className="font-mono">{fractionLabel(c.applicableFraction)}</Td>
               <Td className="font-mono text-lg font-bold">{c.overdueDays}</Td>
               <Td>
-                <Badge>{c.caseStatus}</Badge>
+                <div className="flex flex-wrap gap-1">
+                  <Badge>{c.caseStatus}</Badge>
+                  {c.exclusionStatus === "STRICTER_SCRUTINY" && <Badge tone="accent">Stricter scrutiny</Badge>}
+                </div>
               </Td>
               <Td>
                 <Link href={`/cases/${c.caseId}`} className="font-mono text-xs tracking-widest uppercase underline hover:text-accent">

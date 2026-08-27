@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { getCaseDetail, ForbiddenError, NotFoundError } from "@/lib/queries/caseDetail";
 import { CaseActions } from "@/components/CaseActions";
+import { ManualOverride } from "@/components/ManualOverride";
 import { Label, H1, H2, Badge, Panel } from "@/components/ui";
 
 export default async function CaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -106,7 +107,11 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
         )}
       </section>
 
-      <CaseActions caseId={dbCase.id} />
+      <div className="mb-8">
+        <CaseActions caseId={dbCase.id} />
+      </div>
+
+      <ManualOverride caseId={dbCase.id} />
     </main>
   );
 }
