@@ -107,6 +107,25 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
         )}
       </section>
 
+      {dbCase.potentialMatches.length > 0 && (
+        <section className="mb-8 border-2 border-accent p-5">
+          <H2>Possible other-case matches</H2>
+          <p className="mt-1 mb-3 font-mono text-xs text-foreground/60">
+            Name/age similarity to other people already in the system — this is why &quot;other pending
+            cases&quot; is unresolved. None of this is a verdict; it&apos;s here so you don&apos;t have to
+            hunt for it yourself.
+          </p>
+          <ul className="flex flex-col gap-1">
+            {dbCase.potentialMatches.map((m) => (
+              <li key={m.personId} className="font-mono text-sm">
+                <span className="font-bold">{m.matchedName}</span>{" "}
+                <span className="text-foreground/50">— {Math.round(m.similarity * 100)}% name match</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <div className="mb-8">
         <CaseActions caseId={dbCase.id} />
       </div>

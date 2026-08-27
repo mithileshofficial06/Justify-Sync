@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
 import { logAudit } from "@/lib/audit";
+import { sendEmail } from "@/lib/notifications/email";
 
 /**
  * v5 §5.2 — District Admin confirms the applicant is a genuine,
@@ -64,6 +65,16 @@ export async function POST(request: NextRequest) {
     entityId: userId,
     ipAddress,
   });
+
+  // Notification body carries no case data, only a plain status message —
+  // consistent with v5 §5.3/Stage 9.
+  await sendEmail(
+    applicant.email,
+    decision === "approve" ? "Justify-Sync: your account is approved" : "Justify-Sync: registration not approved",
+    decision === "approve"
+      ? `Your DLSA lawyer account has been approved. You can now log in with your Bar Council enrolment number.`
+      : `Your registration was not approved.${reason ? ` Reason: ${reason}` : ""} Contact your District Admin for details.`
+  );
 
   return NextResponse.json({
     message: `Application ${decision === "approve" ? "approved" : "rejected"}.`,

@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import type { SessionClaims } from "@/lib/auth/jwt";
+import { findPotentialMatches, type PotentialMatch } from "@/lib/entityResolution";
 
 export class ForbiddenError extends Error {}
 export class NotFoundError extends Error {}
@@ -22,5 +23,20 @@ export async function getCaseDetail(caseId: string, session: SessionClaims) {
     throw new ForbiddenError("Case is outside your district.");
   }
 
-  return dbCase;
+  // Only worth computing when the multi-case question is actually
+  // unresolved — this is what makes "needs review" informative instead of
+  // just a dead end (v4 Flaw #18).
+  let potentialMatches: PotentialMatch[] = [];
+  if (dbCase.pendingCaseFlag === "UNKNOWN") {
+    const others = await db.person.findMany({
+      where: { id: { not: dbCase.personId }, cases: { some: {} } },
+      select: { id: true, nameVariants: true, approxAge: true },
+    });
+    potentialMatches = findPotentialMatches(
+      { id: dbCase.personId, nameVariants: dbCase.person.nameVariants, approxAge: dbCase.person.approxAge },
+      others
+    );
+  }
+
+  return { ...dbCase, potentialMatches };
 }
