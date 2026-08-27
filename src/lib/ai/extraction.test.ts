@@ -37,6 +37,20 @@ describe("isHedgedBooleanClaim — the exact bug found via live testing", () => 
     };
     expect(isHedgedBooleanClaim(fact)).toBe(false);
   });
+
+  it("does NOT reject legitimate legal phrasing that happens to contain the word 'pending' — live-verified false positive", () => {
+    // "pending" was originally in the hedge word list, and rejected this
+    // exact real sentence from a synthetic charge sheet, breaking
+    // otherPendingCases extraction 100% of the time (3/3 live runs) even
+    // though the model correctly extracted it every time. "case ... is
+    // pending" is a status being asserted, not a hedge about confidence.
+    const fact = {
+      fieldName: "otherPendingCases" as const,
+      value: "false",
+      sourceSentence: "On enquiry, no other case is presently pending against the accused before any Court.",
+    };
+    expect(isHedgedBooleanClaim(fact)).toBe(false);
+  });
 });
 
 describe("quotesFullSentence — rejects truncated-clause grounding", () => {

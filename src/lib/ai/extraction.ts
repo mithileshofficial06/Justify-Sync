@@ -31,7 +31,7 @@ Extract ONLY these fields, when present in the text:
 - arrestDate: the date of arrest, normalized to YYYY-MM-DD
 - chargedSections: the section(s) charged, e.g. "IPC 325", "BNS 117(2)", or "NDPS 21" for special/local acts (comma-separated if multiple). Always use this "LAW NUMBER" shape — e.g. "Section 21 of the Narcotic Drugs and Psychotropic Substances Act" must be written as "NDPS 21", not spelled out.
 - priorConvictions: exactly "true" or "false" — whether the accused has any prior conviction. If the document does not clearly and unconditionally state this, DO NOT extract this field at all rather than guessing. Read the FULL sentence, not just its first clause: a sentence that starts by saying there is no record of conviction, but goes on with "however", "pending", "awaited", "yet to be received", or any similar qualifier, is NOT a clear "no priors" — it means verification is incomplete, and this field must be omitted entirely.
-- otherPendingCases: exactly "true", "false", or "unclear" — whether the accused has other pending cases
+- otherPendingCases: exactly "true", "false", or "unclear" — whether the accused has any OTHER case pending against them, separate from the case in this charge sheet. Charge sheets typically have a dedicated line for this, often under a heading like "Other pending cases" — for example "On enquiry, no other case is presently pending against the accused before any Court" means the value is "false". This field is just as important as the others above — actively look for it, do not skip it.
 - bailOrder: the bail order date if one is mentioned, normalized to YYYY-MM-DD, or "none" if explicitly stated there is no bail order
 
 For EVERY fact you extract, you must quote the EXACT sentence from the source text it came from, verbatim, in sourceSentence — quote the ENTIRE sentence, from its start to its final period, never a truncated clause. If that full sentence contains any hedge, qualifier, or condition that changes or weakens what it appears to say at first glance, that fact does not count as clearly stated — do not include it. If you cannot find a complete, unqualified sentence that directly supports a fact, do not include that fact at all.
@@ -73,8 +73,17 @@ async function runExtractionPass(documentText: string): Promise<RawExtractedFact
   );
 }
 
+// NOTE: "pending" was in this list originally, and caused a real false
+// positive — live-verified rejecting a perfectly legitimate fact, because
+// "no other case is presently pending against the accused" (the standard
+// legal phrasing for "no other case exists") contains the bare word
+// "pending" despite asserting the opposite of an unresolved/hedged claim.
+// A word match can't tell "case pending" (a status) from "verification
+// [still] pending" (an epistemic hedge) apart — so "pending" alone is
+// excluded; "still awaited"/"has not been received" etc. catch the
+// verified real failure mode without this collision.
 const HEDGE_PATTERN =
-  /\b(however|but|yet|though|although|nevertheless|pending|awaited|still to be|not yet|has not been received|unable to (verify|confirm)|remains? unverified|unconfirmed)\b/i;
+  /\b(however|but|yet|though|although|nevertheless|awaited|still to be|not yet|has not been received|unable to (verify|confirm)|remains? unverified|unconfirmed)\b/i;
 
 /**
  * Live-verified failure mode: the model can quote a genuinely complete
