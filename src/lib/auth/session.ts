@@ -4,6 +4,7 @@ import {
   signAccessToken,
   signRefreshToken,
   verifyAccessToken,
+  verifyRefreshToken,
 } from "./jwt";
 
 const ACCESS_COOKIE = "js_access_token";
@@ -48,4 +49,27 @@ export async function getSession(): Promise<SessionClaims | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * Access tokens last 15 minutes; without this, a user was simply logged
+ * out every 15 minutes despite a 30-day refresh token existing and doing
+ * nothing. Verifies the refresh cookie and reissues both tokens — the
+ * refresh token is rotated too, not just reused, so a stolen refresh token
+ * has a shrinking window of use once the legitimate client refreshes again.
+ */
+export async function refreshSession(): Promise<SessionClaims | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(REFRESH_COOKIE)?.value;
+  if (!token) return null;
+
+  let claims: SessionClaims;
+  try {
+    claims = await verifyRefreshToken(token);
+  } catch {
+    return null;
+  }
+
+  await createSession(claims);
+  return claims;
 }

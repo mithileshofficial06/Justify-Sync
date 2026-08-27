@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Archivo_Black } from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { Marquee } from "@/components/Marquee";
+import { SessionKeepAlive } from "@/components/SessionKeepAlive";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} ${archivoBlack.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
+        <SessionKeepAlive />
         <Marquee />
         <Nav />
         {children}
