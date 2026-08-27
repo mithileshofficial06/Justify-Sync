@@ -6,9 +6,15 @@ import type { ChatCompletionCreateParamsNonStreaming } from "openai/resources/ch
  * drafting (Stage 8) — this client must never be imported by anything in
  * lib/engine/, which is where eligibility is actually decided.
  */
+// The OpenAI SDK throws AT CONSTRUCTION if apiKey is falsy — meaning the
+// whole app (or a test importing this module for its pure helpers) would
+// crash on import, not just fail the specific AI call, if the env var were
+// ever unset. Falling back to a placeholder keeps construction safe; a
+// real call with no real key simply fails with a clear 401 at request
+// time instead of an import-time crash.
 export const aiClient = new OpenAI({
   baseURL: "https://integrate.api.nvidia.com/v1",
-  apiKey: process.env.NVIDIA_API_KEY,
+  apiKey: process.env.NVIDIA_API_KEY || "unset-see-NVIDIA_API_KEY-in-.env",
 });
 
 // nemotron-3-nano-30b-a3b: MoE, ~3B active params per token — chosen for

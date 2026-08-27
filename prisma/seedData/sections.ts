@@ -18,7 +18,7 @@
 export interface SeedSection {
   id: string;
   code: string;
-  law: "IPC" | "BNS";
+  law: "IPC" | "BNS" | "NDPS";
   maxSentenceDays: number;
   isDeathOrLife: boolean;
   isGraded: boolean;
@@ -205,5 +205,16 @@ export const sections: SeedSection[] = [
     version: "0.1.0-unverified",
     citation: null,
     notes: "Criminal intimidation with threat of death, grievous hurt, or similar — up to 7 years.",
+  },
+  {
+    id: "NDPS_21",
+    code: "21",
+    law: "NDPS",
+    maxSentenceDays: 10 * YEAR_DAYS,
+    isDeathOrLife: false,
+    isGraded: true,
+    version: "0.1.0-unverified",
+    citation: null,
+    notes: "NDPS Act §21 (possession of manufactured drugs/preparations) — punishment is heavily graded by quantity (small/intermediate/commercial); this entry uses the intermediate-quantity band (rigorous imprisonment up to 10 years) as a placeholder only. A real deployment needs the quantity threshold modelled explicitly, not a single flat value. NDPS/UAPA/PMLA/POCSO/MCOCA cases are routed to stricter-scrutiny review regardless (v4 Flaw #17), never auto-excluded — this section entry exists so Track A can still compute a threshold for the ranking shown in that review queue.",
   },
 ];

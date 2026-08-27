@@ -7,7 +7,7 @@
  * than risk picking the wrong band of a graded offence.
  */
 export function normalizeSectionText(raw: string): string | null {
-  const match = raw.trim().toUpperCase().match(/^(IPC|BNS)\s*(\d+)(?:\((\d+)\))?$/);
+  const match = raw.trim().toUpperCase().match(/^(IPC|BNS|NDPS)\s*(\d+)(?:\((\d+)\))?$/);
   if (!match) return null;
 
   const [, law, code, subsection] = match;
