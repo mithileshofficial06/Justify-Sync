@@ -11,12 +11,12 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@prisma/client": "7.10.0",
+    "@prisma/client": "6.19.3",
     "@supabase/supabase-js": "^2.112.4",
     "argon2": "^0.45.1",
     "jose": "^6.2.10",
     "next": "16.3.3",
-    "prisma": "7.10.0",
+    "prisma": "6.19.3",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
