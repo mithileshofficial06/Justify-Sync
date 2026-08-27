@@ -1,69 +1,117 @@
-import Image from "next/image";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { getSession } from "@/lib/auth/session";
+import { getRankedList } from "@/lib/queries/rankedList";
 
-export default function Home() {
+function fractionLabel(f: number) {
+  return Math.abs(f - 1 / 3) < 0.001 ? "1/3" : Math.abs(f - 1 / 2) < 0.001 ? "1/2" : f.toFixed(2);
+}
+
+export default async function DashboardPage() {
+  const session = await getSession();
+  if (!session) redirect("/login");
+
+  const { trackA, trackB } = await getRankedList(session);
+  const tier1 = trackA.filter((c) => c.tier === 1);
+  const tier2 = trackA.filter((c) => c.tier === 2);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6">
+      <h1 className="mb-1 text-lg font-semibold">Ranked list</h1>
+      <p className="mb-6 text-sm text-neutral-500">
+        Tier 1 — served the full statutory term — ranks above Tier 2. Within each tier, most overdue first.
+      </p>
+
+      <Section title={`Tier 1 — full term served (${tier1.length})`} emphasized>
+        {tier1.length === 0 ? <Empty /> : <Table rows={tier1} />}
+      </Section>
+
+      <Section title={`Tier 2 — threshold met (${tier2.length})`}>
+        {tier2.length === 0 ? <Empty /> : <Table rows={tier2} />}
+      </Section>
+
+      <Section title={`Track B — bail granted, not released (${trackB.length})`}>
+        {trackB.length === 0 ? (
+          <Empty />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-neutral-200 text-left text-neutral-500 dark:border-neutral-800">
+                  <th className="py-2 pr-4">Person</th>
+                  <th className="py-2 pr-4">Days since bail</th>
+                  <th className="py-2 pr-4">Status</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {trackB.map((c) => (
+                  <tr key={c.caseId} className="border-b border-neutral-100 dark:border-neutral-900">
+                    <td className="py-2 pr-4">{c.personName}</td>
+                    <td className="py-2 pr-4">{c.daysSinceBail ?? "unknown — data quality review"}</td>
+                    <td className="py-2 pr-4">{c.caseStatus}</td>
+                    <td className="py-2">
+                      <Link href={`/cases/${c.caseId}`} className="text-blue-600 hover:underline dark:text-blue-400">
+                        Open
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Section>
+    </main>
+  );
+}
+
+function Section({ title, emphasized, children }: { title: string; emphasized?: boolean; children: React.ReactNode }) {
+  return (
+    <section className="mb-8">
+      <h2 className={`mb-2 text-sm font-medium ${emphasized ? "text-red-700 dark:text-red-400" : "text-neutral-700 dark:text-neutral-300"}`}>
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
+function Empty() {
+  return <p className="text-sm text-neutral-400">Nothing here right now.</p>;
+}
+
+function Table({ rows }: { rows: Awaited<ReturnType<typeof getRankedList>>["trackA"] }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-neutral-200 text-left text-neutral-500 dark:border-neutral-800">
+            <th className="py-2 pr-4">Person</th>
+            <th className="py-2 pr-4">Section</th>
+            <th className="py-2 pr-4">Fraction</th>
+            <th className="py-2 pr-4">Overdue days</th>
+            <th className="py-2 pr-4">Status</th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((c) => (
+            <tr key={c.caseId} className="border-b border-neutral-100 dark:border-neutral-900">
+              <td className="py-2 pr-4">{c.personName}</td>
+              <td className="py-2 pr-4">{c.governingSection}</td>
+              <td className="py-2 pr-4">{fractionLabel(c.applicableFraction)}</td>
+              <td className="py-2 pr-4 font-medium">{c.overdueDays}</td>
+              <td className="py-2 pr-4">{c.caseStatus}</td>
+              <td className="py-2">
+                <Link href={`/cases/${c.caseId}`} className="text-blue-600 hover:underline dark:text-blue-400">
+                  Open
+                </Link>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

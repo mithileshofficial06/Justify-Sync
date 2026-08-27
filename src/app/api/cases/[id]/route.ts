@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
+import { getCaseDetail, ForbiddenError, NotFoundError } from "@/lib/queries/caseDetail";
 import { logAudit } from "@/lib/audit";
 
 /**
@@ -20,34 +20,23 @@ export async function GET(
 
   const { id } = await params;
 
-  const dbCase = await db.case.findUnique({
-    where: { id },
-    include: {
-      person: true,
-      formulaResult: { include: { governingSection: true } },
-      trackBFlag: true,
-      extractedFacts: true,
-      applications: { orderBy: { generatedAt: "desc" } },
-      statusEvents: { orderBy: { eventTime: "asc" } },
-    },
-  });
+  try {
+    const dbCase = await getCaseDetail(id, session);
 
-  if (!dbCase) {
-    return NextResponse.json({ error: "No such case." }, { status: 404 });
+    // Every case view is logged, not just writes (v5 §5.5) — under-access
+    // is a legal risk, but so is unnecessary viewing of sensitive undertrial data.
+    await logAudit({
+      actorUserId: session.userId,
+      action: "viewed_case",
+      entity: "Case",
+      entityId: id,
+      ipAddress: request.headers.get("x-forwarded-for"),
+    });
+
+    return NextResponse.json({ case: dbCase });
+  } catch (error) {
+    if (error instanceof NotFoundError) return NextResponse.json({ error: error.message }, { status: 404 });
+    if (error instanceof ForbiddenError) return NextResponse.json({ error: error.message }, { status: 403 });
+    throw error;
   }
-  if (session.role !== "STATE_ADMIN" && dbCase.districtId !== session.districtId) {
-    return NextResponse.json({ error: "Case is outside your district." }, { status: 403 });
-  }
-
-  // Every case view is logged, not just writes (v5 §5.5) — under-access is
-  // a legal risk, but so is unnecessary viewing of sensitive undertrial data.
-  await logAudit({
-    actorUserId: session.userId,
-    action: "viewed_case",
-    entity: "Case",
-    entityId: id,
-    ipAddress: request.headers.get("x-forwarded-for"),
-  });
-
-  return NextResponse.json({ case: dbCase });
 }

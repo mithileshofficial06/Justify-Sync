@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
-import { rankCases } from "@/lib/engine/rank";
+import { getRankedList } from "@/lib/queries/rankedList";
 import { logAudit } from "@/lib/audit";
 
 /**
@@ -18,56 +17,7 @@ export async function GET() {
     return NextResponse.json({ error: "Not authorized to view cases." }, { status: 403 });
   }
 
-  const districtFilter =
-    session.role === "STATE_ADMIN" ? {} : { districtId: session.districtId ?? undefined };
-
-  const [trackACases, trackBFlags] = await Promise.all([
-    db.case.findMany({
-      where: {
-        ...districtFilter,
-        formulaResult: { tier: { not: null } },
-      },
-      include: {
-        person: true,
-        formulaResult: { include: { governingSection: true } },
-      },
-    }),
-    db.trackBFlag.findMany({
-      where: { case: districtFilter },
-      include: { case: { include: { person: true } } },
-    }),
-  ]);
-
-  const ranked = rankCases(
-    trackACases.map((c) => ({
-      caseId: c.id,
-      tier: c.formulaResult!.tier === "TIER_1" ? 1 : 2,
-      overdueDays: c.formulaResult!.overdueDays ?? 0,
-    }))
-  );
-
-  const rankedWithDetail = ranked.map((r) => {
-    const c = trackACases.find((tc) => tc.id === r.caseId)!;
-    return {
-      caseId: c.id,
-      personName: c.person.nameVariants[0] ?? "Unknown",
-      tier: r.tier,
-      overdueDays: r.overdueDays,
-      governingSection: c.formulaResult!.governingSection.code,
-      applicableFraction: c.formulaResult!.applicableFraction,
-      thresholdDays: c.formulaResult!.thresholdDays,
-      daysInCustody: c.formulaResult!.daysInCustody,
-      exclusionStatus: c.exclusionStatus,
-      caseStatus: c.caseStatus,
-    };
-  });
-
-  const trackB = trackBFlags.map((f) => ({
-    caseId: f.caseId,
-    personName: f.case.person.nameVariants[0] ?? "Unknown",
-    daysSinceBail: f.daysSinceBail,
-    caseStatus: f.case.caseStatus,
-  }));
+  const result = await getRankedList(session);
 
   await logAudit({
     actorUserId: session.userId,
@@ -76,5 +26,5 @@ export async function GET() {
     ipAddress: null,
   });
 
-  return NextResponse.json({ trackA: rankedWithDetail, trackB });
+  return NextResponse.json(result);
 }
