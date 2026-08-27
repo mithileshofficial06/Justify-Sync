@@ -12,7 +12,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "db:bootstrap-admin": "tsx prisma/bootstrapAdmin.ts"
   },
   "dependencies": {
     "@prisma/client": "6.19.3",
