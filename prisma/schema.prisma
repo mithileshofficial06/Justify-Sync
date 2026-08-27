@@ -68,7 +68,11 @@ model User {
   email         String     @unique
   mobileNumber  String
   passwordHash  String
-  otpSecret     String?
+  otpSecret     String?   // TOTP authenticator-app secret, if that's the lawyer's chosen OTP method
+  otpCodeHash   String?   // hashed SMS OTP code currently pending verification
+  otpExpiresAt  DateTime?
+  failedLoginAttempts Int      @default(0)
+  lockedUntil         DateTime? // v5 §5.3: 5 failed attempts -> 15 min lockout
   status        UserStatus @default(PENDING_VERIFICATION)
   createdAt     DateTime   @default(now())
 
