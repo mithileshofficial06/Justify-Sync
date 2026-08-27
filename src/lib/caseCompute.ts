@@ -25,11 +25,26 @@ export async function computeCase(caseId: string) {
     ])
   );
 
+  // v4 Flaw #12: prior-conviction status has no dedicated Case column on
+  // purpose — it must come from a grounded ExtractedFact (Stage 3), never
+  // be silently assumed. Missing/low-confidence stays null -> exclusions
+  // routes it to needs_human_review rather than guessing "no priors".
+  const priorConvictionsFact = await db.extractedFact.findFirst({
+    where: { caseId, fieldName: "priorConvictions", confidence: { gte: 0.7 } },
+    orderBy: { extractedAt: "desc" },
+  });
+  const priorConvictions =
+    priorConvictionsFact?.value === "true"
+      ? true
+      : priorConvictionsFact?.value === "false"
+        ? false
+        : null;
+
   const caseInput: CaseInput = {
     id: dbCase.id,
     arrestDate: dbCase.arrestDate,
     chargedSectionIds: dbCase.chargedSectionIds,
-    priorConvictions: null, // resolved from ExtractedFact once extraction (Stage 3) is wired in
+    priorConvictions,
     isJuvenile: dbCase.isJuvenile,
     pendingCaseFlag: dbCase.pendingCaseFlag.toLowerCase() as CaseInput["pendingCaseFlag"],
     specialActFlag: dbCase.specialActFlag,
@@ -54,10 +69,13 @@ export async function computeCase(caseId: string) {
   let formulaResult = null;
   if (exclusion.status === "clear" || exclusion.status === "stricter_scrutiny") {
     const custodyDays = daysInCustody(dbCase.arrestDate);
-    // priorConvictions is required past this point; a null value should
-    // already have stopped at checkExclusions (needs_human_review).
-    const priorConvictions = caseInput.priorConvictions ?? false;
-    const result = classifyTier(custodyDays, governingSection, priorConvictions);
+    if (caseInput.priorConvictions === null) {
+      // Should be unreachable — checkExclusions returns needs_human_review
+      // for a null priorConvictions, which is filtered out above. Fail loud
+      // rather than silently defaulting to the more lenient 1/3 fraction.
+      throw new Error(`computeCase invariant violated: case ${caseId} reached Track A with unresolved prior-conviction status.`);
+    }
+    const result = classifyTier(custodyDays, governingSection, caseInput.priorConvictions);
 
     formulaResult = await db.formulaResult.upsert({
       where: { caseId },
