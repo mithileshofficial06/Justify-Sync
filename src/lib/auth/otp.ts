@@ -1,14 +1,10 @@
 import { hashPassword, verifyPassword } from "./password";
 
 const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes
-const OTP_DIGITS = 6;
 
 export function generateOtpCode(): string {
-  const max = 10 ** OTP_DIGITS;
-  const code = Math.floor(Math.random() * max)
-    .toString()
-    .padStart(OTP_DIGITS, "0");
-  return code;
+  // TEMP (demo): hardcoded so the demo isn't blocked by SMS delivery.
+  return "123456";
 }
 
 export async function hashOtpCode(code: string): Promise<string> {
