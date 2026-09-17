@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth/session";
 import { logAudit } from "@/lib/audit";
 import { getCaseDetail, ForbiddenError, NotFoundError } from "@/lib/queries/caseDetail";
 import { formatDateDMY, formatDays } from "@/lib/engine/explain";
+import { daysSince } from "@/lib/engine/custody";
 import { StatusActions, PipelineTools } from "@/components/CaseActions";
 import { ManualOverride } from "@/components/ManualOverride";
 import { ArithmeticPanel } from "@/components/case/ArithmeticPanel";
@@ -167,7 +168,7 @@ export default async function CaseDetailPage(props: PageProps<"/cases/[id]">) {
         </DraftsPanel>
       )}
 
-      <StatusTimeline events={c.statusEvents} currentStatus={c.caseStatus} statusUpdatedAt={c.statusUpdatedAt} />
+      <StatusTimeline events={c.statusEvents} currentStatus={c.caseStatus} daysSince={daysSince(c.statusUpdatedAt)} />
 
       {c.potentialMatches.length > 0 && (
         <section className="border-2 border-accent bg-panel p-4">

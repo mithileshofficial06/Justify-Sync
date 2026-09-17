@@ -230,9 +230,8 @@ export interface TimelineEvent {
   setByUser: { fullName: string } | null;
 }
 
-export function StatusTimeline({ events, currentStatus, statusUpdatedAt }: { events: TimelineEvent[]; currentStatus: string; statusUpdatedAt: Date }) {
+export function StatusTimeline({ events, currentStatus, daysSince }: { events: TimelineEvent[]; currentStatus: string; daysSince: number }) {
   const reached = new Set(events.map((e) => e.status));
-  const daysSince = Math.floor((Date.now() - statusUpdatedAt.getTime()) / 86_400_000);
   return (
     <section className="border-2 border-foreground bg-panel">
       <div className="flex flex-wrap items-center gap-2 border-b-2 border-foreground/15 px-4 py-3">
