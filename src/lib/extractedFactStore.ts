@@ -14,6 +14,7 @@ export interface FactToStore {
   value: string;
   sourceSentence: string;
   confidence: number;
+  method?: "AI_DOUBLE_PASS" | "PRECOMPUTED_FIXTURE" | "MANUAL_OVERRIDE";
   reviewedById?: string;
 }
 
@@ -26,6 +27,7 @@ export async function storeExtractedFacts(facts: FactToStore[]): Promise<void> {
       value: encryptField(f.value),
       sourceSentence: encryptField(f.sourceSentence),
       confidence: f.confidence,
+      method: f.method,
       reviewedById: f.reviewedById,
     })),
   });

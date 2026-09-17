@@ -10,6 +10,8 @@ describe("normalizeSectionText", () => {
     ["BNS 125(b)", "BNS_125_B"],
     ["NDPS 21(b)", "NDPS_21_B"],
     ["IPC Section 420", "IPC_420"],
+    ["ARMS 25(1B)(a)", "ARMS_25_1B_A"],
+    ["TNPA 4(1)(a)", "TNPA_4_1_A"],
   ])("%s -> %s", (raw, id) => {
     expect(normalizeSectionText(raw)).toBe(id);
   });

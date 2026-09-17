@@ -6,35 +6,70 @@ export type CaseStatus =
   | "bail_granted"
   | "released";
 
+export type EscalationTrigger = "not_filed" | "no_hearing" | "not_released" | "no_movement";
+
+export type EscalationResult =
+  | { escalate: true; trigger: EscalationTrigger; reason: string; daysStuck: number; limitDays: number }
+  | { escalate: false; trigger: null; reason: null; daysStuck: number; limitDays: null };
+
+export const ESCALATION_LIMITS = {
+  notFiled: 30,
+  noHearing: 60,
+  notReleased: 7,
+  noMovement: 30,
+} as const;
+
 /**
- * v5 Stage 11 — the accountability loop. Any case with no status
- * movement for 30 days is escalated regardless of who was meant to
- * update it.
+ * v5 Stage 11 — the accountability loop. Identification is not the
+ * bottleneck; filing and release are. Each trigger names the specific leak
+ * so the stalled view can say what went wrong in plain language.
  */
 export function checkEscalation(
   status: CaseStatus,
   statusUpdatedAt: Date,
   today: Date = new Date()
-): { escalate: boolean; reason: string | null } {
-  const daysSinceUpdate = Math.floor(
-    (today.getTime() - statusUpdatedAt.getTime()) / (1000 * 60 * 60 * 24)
-  );
+): EscalationResult {
+  const daysStuck = Math.floor((today.getTime() - statusUpdatedAt.getTime()) / (1000 * 60 * 60 * 24));
 
-  if (status === "delivered" && daysSinceUpdate >= 30) {
-    return { escalate: true, reason: "Not filed 30+ days after identification/delivery." };
+  if ((status === "identified" || status === "delivered") && daysStuck >= ESCALATION_LIMITS.notFiled) {
+    return {
+      escalate: true,
+      trigger: "not_filed",
+      daysStuck,
+      limitDays: ESCALATION_LIMITS.notFiled,
+      reason: `Identified as eligible ${daysStuck} days ago — no release application has been filed.`,
+    };
   }
 
-  if (status === "filed" && daysSinceUpdate >= 60) {
-    return { escalate: true, reason: "No hearing 60+ days after filing." };
+  if (status === "filed" && daysStuck >= ESCALATION_LIMITS.noHearing) {
+    return {
+      escalate: true,
+      trigger: "no_hearing",
+      daysStuck,
+      limitDays: ESCALATION_LIMITS.noHearing,
+      reason: `Application filed ${daysStuck} days ago — no hearing has been recorded.`,
+    };
   }
 
-  if (status === "bail_granted" && daysSinceUpdate >= 7) {
-    return { escalate: true, reason: "Not released 7+ days after bail granted — probable surety failure." };
+  if (status === "bail_granted" && daysStuck >= ESCALATION_LIMITS.notReleased) {
+    return {
+      escalate: true,
+      trigger: "not_released",
+      daysStuck,
+      limitDays: ESCALATION_LIMITS.notReleased,
+      reason: `Bail granted ${daysStuck} days ago — still in custody. Probable surety failure.`,
+    };
   }
 
-  if (daysSinceUpdate >= 30 && status !== "released") {
-    return { escalate: true, reason: "No status movement for 30+ days." };
+  if (status === "heard" && daysStuck >= ESCALATION_LIMITS.noMovement) {
+    return {
+      escalate: true,
+      trigger: "no_movement",
+      daysStuck,
+      limitDays: ESCALATION_LIMITS.noMovement,
+      reason: `Heard ${daysStuck} days ago — no order recorded since.`,
+    };
   }
 
-  return { escalate: false, reason: null };
+  return { escalate: false, trigger: null, reason: null, daysStuck, limitDays: null };
 }

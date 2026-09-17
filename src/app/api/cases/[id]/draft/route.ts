@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
-import { draftApplication } from "@/lib/ai/drafting";
+import { draftWithFallback } from "@/lib/ai/drafting";
 import { logAudit } from "@/lib/audit";
 
 /**
@@ -32,15 +32,15 @@ export async function POST(
   }
 
   const personName = dbCase.person.nameVariants[0] ?? "the accused";
-  let draftText: string;
+  let drafted: { draftText: string; generator: "AI" | "TEMPLATE" };
   let type: "release" | "surety";
 
   if (dbCase.formulaResult?.tier) {
     type = "release";
-    draftText = await draftApplication({
+    drafted = await draftWithFallback({
       type: "release",
       personName,
-      governingSectionCode: dbCase.formulaResult.governingSection.code,
+      governingSectionCode: `${dbCase.formulaResult.governingSection.law} ${dbCase.formulaResult.governingSection.code}`,
       applicableFraction: dbCase.formulaResult.applicableFraction,
       thresholdDays: dbCase.formulaResult.thresholdDays,
       daysInCustody: dbCase.formulaResult.daysInCustody,
@@ -49,7 +49,7 @@ export async function POST(
     });
   } else if (dbCase.trackBFlag && dbCase.trackBFlag.daysSinceBail !== null) {
     type = "surety";
-    draftText = await draftApplication({
+    drafted = await draftWithFallback({
       type: "surety",
       personName,
       bailOrderDate: dbCase.trackBFlag.bailOrderDate?.toISOString().slice(0, 10) ?? "unknown",
@@ -63,7 +63,7 @@ export async function POST(
   }
 
   const application = await db.application.create({
-    data: { caseId: id, type, draftText },
+    data: { caseId: id, type, draftText: drafted.draftText, generator: drafted.generator },
   });
 
   await logAudit({

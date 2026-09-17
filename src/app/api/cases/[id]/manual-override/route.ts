@@ -81,6 +81,7 @@ export async function POST(
         value: String(priorConvictions),
         sourceSentence: `Manually confirmed by ${session.role.toLowerCase()} (user ${session.userId}) via override — not from a document.`,
         confidence: 1.0,
+        method: "MANUAL_OVERRIDE",
       },
     ]);
   }

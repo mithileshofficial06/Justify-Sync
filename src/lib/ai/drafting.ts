@@ -1,4 +1,5 @@
 import { createChatCompletion, AI_MODEL } from "./client";
+import { releaseApplicationTemplate, suretyApplicationTemplate } from "./draftTemplates";
 
 /**
  * v5 Stage 8 — AI drafts the paperwork. This never decides eligibility;
@@ -70,4 +71,18 @@ export async function draftApplication(input: DraftInput): Promise<string> {
   });
 
   return response.choices[0]?.message?.content ?? "";
+}
+
+export function isAiConfigured(): boolean {
+  return Boolean(process.env.NVIDIA_API_KEY);
+}
+
+export function templateDraft(input: DraftInput): string {
+  return input.type === "release" ? releaseApplicationTemplate(input) : suretyApplicationTemplate(input);
+}
+
+/** Uses the AI drafter when a key is configured, otherwise the deterministic template — and says which. */
+export async function draftWithFallback(input: DraftInput): Promise<{ draftText: string; generator: "AI" | "TEMPLATE" }> {
+  if (!isAiConfigured()) return { draftText: templateDraft(input), generator: "TEMPLATE" };
+  return { draftText: await draftApplication(input), generator: "AI" };
 }
