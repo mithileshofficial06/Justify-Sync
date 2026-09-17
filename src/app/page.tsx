@@ -1,6 +1,6 @@
 import { getSession } from "@/lib/auth/session";
 import { getPublicDemoAccounts } from "@/lib/demo";
-import { Showcase } from "@/components/Showcase";
+import { LandingPage } from "@/components/landing/LandingPage";
 import { RankedListDashboard } from "@/components/RankedListDashboard";
 
 export default async function HomePage() {
@@ -8,6 +8,6 @@ export default async function HomePage() {
   return session ? (
     <RankedListDashboard session={session} />
   ) : (
-    <Showcase demoAccounts={getPublicDemoAccounts()} />
+    <LandingPage demoAccounts={getPublicDemoAccounts()} />
   );
 }
