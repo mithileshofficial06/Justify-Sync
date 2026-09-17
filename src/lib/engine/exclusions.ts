@@ -14,6 +14,7 @@ export function checkExclusions(
   if (caseInput.isJuvenile) {
     return {
       status: "excluded",
+      code: "JUVENILE",
       reason: "Accused was a minor at the time of the offence — governed by the Juvenile Justice Act, not BNSS.",
     };
   }
@@ -24,6 +25,7 @@ export function checkExclusions(
   if (governingSection.isGraded && !governingSection.gradedBand && governingSection.isDeathOrLife) {
     return {
       status: "needs_human_review",
+      code: "GRADED_BAND_UNRESOLVED",
       reason: `Graded section (${governingSection.law} ${governingSection.code}) and the record does not establish which part applies — one part carries life imprisonment, so the band decides whether §479 applies at all.`,
     };
   }
@@ -31,6 +33,7 @@ export function checkExclusions(
   if (governingSection.isDeathOrLife) {
     return {
       status: "excluded",
+      code: "DEATH_OR_LIFE",
       reason: "Death penalty or life imprisonment is a possible sentence for the governing section — statutory carve-out under §479 itself.",
     };
   }
@@ -38,6 +41,7 @@ export function checkExclusions(
   if (caseInput.pendingCaseFlag === "confirmed_multi") {
     return {
       status: "excluded",
+      code: "CONFIRMED_MULTI",
       reason: "Confirmed match: more than one pending case against the accused (§479(2)).",
     };
   }
@@ -45,6 +49,7 @@ export function checkExclusions(
   if (caseInput.pendingCaseFlag === "unknown") {
     return {
       status: "needs_human_review",
+      code: "PENDING_UNKNOWN",
       reason: "Could not confirm whether the accused has other pending cases — entity resolution is uncertain, never silently treated as \"none\".",
     };
   }
@@ -52,6 +57,7 @@ export function checkExclusions(
   if (caseInput.priorConvictions === null) {
     return {
       status: "needs_human_review",
+      code: "PRIORS_UNKNOWN",
       reason: "Prior-conviction field is blank/unclear — never assumed \"no priors\" (v4 Flaw #12).",
     };
   }
@@ -59,6 +65,7 @@ export function checkExclusions(
   if (caseInput.specialActFlag || governingSection.isSpecialAct) {
     return {
       status: "stricter_scrutiny",
+      code: "SPECIAL_ACT",
       reason: "Charged under NDPS/UAPA/PMLA/POCSO/MCOCA or a state security act — routed to mandatory lawyer review, not auto-ranked. Still ranked, because courts have applied §479 to special-act undertrials too (v4 Flaw #17).",
     };
   }

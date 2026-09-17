@@ -80,6 +80,13 @@ describe("checkExclusions", () => {
     expect("reason" in result && result.reason).toMatch(/Juvenile Justice Act/);
   });
 
+  it("tags each outcome with a stable code", () => {
+    expect(checkExclusions({ ...baseCase, priorConvictions: null }, normalSection)).toMatchObject({ code: "PRIORS_UNKNOWN" });
+    expect(checkExclusions({ ...baseCase, pendingCaseFlag: "unknown" }, normalSection)).toMatchObject({ code: "PENDING_UNKNOWN" });
+    expect(checkExclusions({ ...baseCase, isJuvenile: true }, normalSection)).toMatchObject({ code: "JUVENILE" });
+    expect(checkExclusions({ ...baseCase, specialActFlag: true }, normalSection)).toMatchObject({ code: "SPECIAL_ACT" });
+  });
+
   it("clears an ordinary case with none of the above", () => {
     expect(checkExclusions(baseCase, normalSection).status).toBe("clear");
   });

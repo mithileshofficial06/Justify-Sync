@@ -156,6 +156,7 @@ model Case {
   specialActFlag    Boolean         @default(false)
   exclusionStatus   ExclusionStatus @default(CLEAR)
   exclusionReason   String?
+  exclusionCode     String?         // stable engine code, e.g. "PRIORS_UNKNOWN" — the reason text is for humans
 
   caseStatus        CaseStatus      @default(IDENTIFIED)
   statusUpdatedAt   DateTime        @default(now())

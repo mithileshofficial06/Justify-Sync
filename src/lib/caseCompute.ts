@@ -70,6 +70,7 @@ export async function computeCase(caseId: string) {
     data: {
       exclusionStatus: exclusion.status.toUpperCase() as never,
       exclusionReason: "reason" in exclusion ? exclusion.reason : null,
+      exclusionCode: "code" in exclusion ? exclusion.code : null,
     },
   });
 

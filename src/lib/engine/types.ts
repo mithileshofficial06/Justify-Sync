@@ -27,10 +27,19 @@ export interface CaseInput {
   bailOrderDate: Date | null;
 }
 
+export type ExclusionCode =
+  | "JUVENILE"
+  | "GRADED_BAND_UNRESOLVED"
+  | "DEATH_OR_LIFE"
+  | "CONFIRMED_MULTI"
+  | "PENDING_UNKNOWN"
+  | "PRIORS_UNKNOWN"
+  | "SPECIAL_ACT";
+
 export type ExclusionResult =
-  | { status: "excluded"; reason: string }
-  | { status: "stricter_scrutiny"; reason: string }
-  | { status: "needs_human_review"; reason: string }
+  | { status: "excluded"; code: "JUVENILE" | "DEATH_OR_LIFE" | "CONFIRMED_MULTI"; reason: string }
+  | { status: "stricter_scrutiny"; code: "SPECIAL_ACT"; reason: string }
+  | { status: "needs_human_review"; code: "GRADED_BAND_UNRESOLVED" | "PENDING_UNKNOWN" | "PRIORS_UNKNOWN"; reason: string }
   | { status: "clear" };
 
 export type Tier = 1 | 2 | null;
