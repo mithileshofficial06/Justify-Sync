@@ -19,7 +19,7 @@ import { logAudit } from "@/lib/audit";
  */
 const RETENTION_DAYS = 365 * 3;
 
-export async function POST(request: NextRequest) {
+async function handler(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
   if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
@@ -55,3 +55,7 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ casesPurged: eligibleCases.length });
 }
+
+// Vercel Cron invokes jobs with GET; POST is kept for manual triggering.
+export const GET = handler;
+export const POST = handler;
