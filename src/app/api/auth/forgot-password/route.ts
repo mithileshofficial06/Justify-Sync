@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
 
   await sendEmail(
     user.email,
-    "Justify-Sync: reset your password",
+    "JuriSync: reset your password",
     `A password reset was requested for your account. This link expires in 1 hour and can only be used once:\n\n${resetLink}\n\nIf you didn't request this, you can ignore this email.`
   );
 

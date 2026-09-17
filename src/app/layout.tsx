@@ -22,7 +22,7 @@ const archivoBlack = Archivo_Black({
 });
 
 export const metadata: Metadata = {
-  title: "Justify-Sync",
+  title: "JuriSync",
   description: "Undertrial Release Triage System",
 };
 

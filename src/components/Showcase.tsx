@@ -57,7 +57,7 @@ export function Showcase() {
                 transition={{ duration: 0.7, ease: EASE, delay: 0.05 }}
                 className="block text-[15vw] sm:text-[9rem] md:text-[10rem]"
               >
-                Justify
+                Juri
               </motion.span>
               <motion.span
                 initial={{ opacity: 0, y: 40 }}

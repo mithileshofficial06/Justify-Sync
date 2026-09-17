@@ -13,7 +13,7 @@ export async function sendEmail(to: string, subject: string, text: string): Prom
 
   const resend = new Resend(process.env.RESEND_API_KEY);
   const { error } = await resend.emails.send({
-    from: process.env.NOTIFICATION_FROM_EMAIL || "Justify-Sync <onboarding@resend.dev>",
+    from: process.env.NOTIFICATION_FROM_EMAIL || "JuriSync <onboarding@resend.dev>",
     to,
     subject,
     text,

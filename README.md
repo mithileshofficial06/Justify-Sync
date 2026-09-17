@@ -1,12 +1,12 @@
-# Justify-Sync
+# JuriSync
 
-**Justify-Sync** finds undertrial prisoners in Indian district jails who have already served enough time in custody to be released under **Section 479 of the Bharatiya Nagarik Suraksha Sanhita, 2023 (BNSS)** — and gets a DLSA (District Legal Services Authority) lawyer to file for their release, with a human confirming every decision along the way.
+**JuriSync** finds undertrial prisoners in Indian district jails who have already served enough time in custody to be released under **Section 479 of the Bharatiya Nagarik Suraksha Sanhita, 2023 (BNSS)** — and gets a DLSA (District Legal Services Authority) lawyer to file for their release, with a human confirming every decision along the way.
 
-Section 479 says an undertrial who has served half (or a third, for first‑time offenders) of the maximum sentence their charged offence carries is entitled to release on a personal bond. In practice, nobody is systematically checking custody duration against this rule across thousands of cases — so eligible prisoners stay in jail. Justify-Sync is that check, run daily, with AI doing the tedious document reading and a fixed, auditable formula — never the AI — doing the eligibility decision.
+Section 479 says an undertrial who has served half (or a third, for first‑time offenders) of the maximum sentence their charged offence carries is entitled to release on a personal bond. In practice, nobody is systematically checking custody duration against this rule across thousands of cases — so eligible prisoners stay in jail. JuriSync is that check, run daily, with AI doing the tedious document reading and a fixed, auditable formula — never the AI — doing the eligibility decision.
 
 ## The problem, in one paragraph
 
-Charge sheets are unstructured text. Custody duration is arithmetic. The rule (§479 BNSS) is fixed and public. Nothing about *deciding* eligibility should require a human to page through a docket — but nothing about it should be left to an LLM's judgment either. Justify-Sync splits the work along that line: AI reads documents and drafts paperwork; a small set of pure, testable functions in [`src/lib/engine/`](src/lib/engine/) makes every eligibility call; a lawyer signs off before anything is filed.
+Charge sheets are unstructured text. Custody duration is arithmetic. The rule (§479 BNSS) is fixed and public. Nothing about *deciding* eligibility should require a human to page through a docket — but nothing about it should be left to an LLM's judgment either. JuriSync splits the work along that line: AI reads documents and drafts paperwork; a small set of pure, testable functions in [`src/lib/engine/`](src/lib/engine/) makes every eligibility call; a lawyer signs off before anything is filed.
 
 ## Features
 

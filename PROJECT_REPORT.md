@@ -1,8 +1,8 @@
-# Justify-Sync — Project Report
+# JuriSync — Project Report
 
 ## 1. Abstract
 
-Justify-Sync is a web application that identifies undertrial prisoners in Indian district jails who are eligible for release under **Section 479 of the Bharatiya Nagarik Suraksha Sanhita, 2023 (BNSS)**, and helps District Legal Services Authority (DLSA) lawyers act on that eligibility — from AI-assisted document reading through to a drafted court application, with a human confirming every consequential decision. It is built as a full-stack Next.js application backed by PostgreSQL (Supabase), with a strict architectural separation between a deterministic, unit-tested eligibility engine and an AI layer used only for document extraction and drafting.
+JuriSync is a web application that identifies undertrial prisoners in Indian district jails who are eligible for release under **Section 479 of the Bharatiya Nagarik Suraksha Sanhita, 2023 (BNSS)**, and helps District Legal Services Authority (DLSA) lawyers act on that eligibility — from AI-assisted document reading through to a drafted court application, with a human confirming every consequential decision. It is built as a full-stack Next.js application backed by PostgreSQL (Supabase), with a strict architectural separation between a deterministic, unit-tested eligibility engine and an AI layer used only for document extraction and drafting.
 
 ## 2. Problem statement
 
@@ -12,7 +12,7 @@ The system has to solve two different kinds of problem at once:
 1. **An information-extraction problem** — reading free-text legal documents to recover a handful of structured facts, reliably enough to act on.
 2. **A decision problem** — applying a fixed statutory rule correctly and consistently, with no tolerance for a wrong answer being silently produced by a probabilistic model.
 
-Justify-Sync's central design decision is to never let the same component do both.
+JuriSync's central design decision is to never let the same component do both.
 
 ## 3. Objectives
 
@@ -161,4 +161,4 @@ Vitest unit tests cover the parts of the system where a silent regression would 
 
 ## 10. Conclusion
 
-Justify-Sync demonstrates a workable pattern for applying AI to a legal-process problem without letting AI make the legal decision: a small, pure, heavily-tested rules engine owns eligibility; an AI layer with explicit grounding and self-check owns the tedious document-reading and drafting; and a human lawyer remains the mandatory last step before anything reaches a court. Every other feature in the system — district scoping, encryption at rest, audit logging, escalation, retention — exists to make that core loop trustworthy enough to run against real undertrial records.
+JuriSync demonstrates a workable pattern for applying AI to a legal-process problem without letting AI make the legal decision: a small, pure, heavily-tested rules engine owns eligibility; an AI layer with explicit grounding and self-check owns the tedious document-reading and drafting; and a human lawyer remains the mandatory last step before anything reaches a court. Every other feature in the system — district scoping, encryption at rest, audit logging, escalation, retention — exists to make that core loop trustworthy enough to run against real undertrial records.

@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
   // consistent with v5 §5.3/Stage 9.
   await sendEmail(
     applicant.email,
-    decision === "approve" ? "Justify-Sync: your account is approved" : "Justify-Sync: registration not approved",
+    decision === "approve" ? "JuriSync: your account is approved" : "JuriSync: registration not approved",
     decision === "approve"
       ? `Your DLSA lawyer account has been approved. You can now log in with your Bar Council enrolment number.`
       : `Your registration was not approved.${reason ? ` Reason: ${reason}` : ""} Contact your District Admin for details.`

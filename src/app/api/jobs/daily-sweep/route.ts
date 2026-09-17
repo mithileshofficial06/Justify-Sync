@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     for (const admin of admins) {
       await sendEmail(
         admin.email,
-        `Justify-Sync: ${districtEscalations.length} case(s) stalled in ${districtEscalations[0].districtName}`,
+        `JuriSync: ${districtEscalations.length} case(s) stalled in ${districtEscalations[0].districtName}`,
         `The daily sweep found ${districtEscalations.length} case(s) with no status movement past their threshold:\n\n${body}\n\nLog in to review: see the "Stalled" page.`
       );
     }

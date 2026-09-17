@@ -8,7 +8,7 @@ function Logo() {
       <span className="flex h-7 w-7 items-center justify-center border-2 border-foreground bg-accent font-display text-sm text-white">
         J
       </span>
-      <span className="font-display text-sm tracking-tight uppercase">Justify-Sync</span>
+      <span className="font-display text-sm tracking-tight uppercase">JuriSync</span>
     </Link>
   );
 }
