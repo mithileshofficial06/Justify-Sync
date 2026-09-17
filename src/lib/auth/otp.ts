@@ -1,10 +1,10 @@
+import { randomInt } from "node:crypto";
 import { hashPassword, verifyPassword } from "./password";
 
 const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 export function generateOtpCode(): string {
-  // TEMP (demo): hardcoded so the demo isn't blocked by SMS delivery.
-  return "123456";
+  return String(randomInt(0, 1_000_000)).padStart(6, "0");
 }
 
 export async function hashOtpCode(code: string): Promise<string> {

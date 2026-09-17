@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { motion, MotionConfig, type Variants } from "framer-motion";
 import { Label, Panel, SectionLabel, LinkButton, Badge } from "@/components/ui";
 import { CountUp } from "@/components/CountUp";
+import type { PublicDemoAccount } from "@/lib/demo";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -18,7 +20,7 @@ const stagger: Variants = {
 
 const viewport = { once: true, margin: "-80px" };
 
-export function Showcase() {
+export function Showcase({ demoAccounts }: { demoAccounts: PublicDemoAccount[] }) {
   return (
     <MotionConfig reducedMotion="user">
       <main className="flex-1">
@@ -101,6 +103,8 @@ export function Showcase() {
               <LinkButton href="/register">Register as DLSA lawyer →</LinkButton>
               <LinkButton href="/login">Log in</LinkButton>
             </motion.div>
+
+            {demoAccounts.length > 0 && <DemoSignInPanel accounts={demoAccounts} />}
           </div>
         </section>
 
@@ -145,17 +149,36 @@ export function Showcase() {
             <motion.div variants={fadeUp} className="mt-6 border-2 border-foreground p-5">
               <Label>The funnel, one real quarter (Jan–Mar 2024)</Label>
               <div className="mt-4 flex flex-wrap items-center gap-2 font-mono text-sm sm:text-base">
-                <span className="border-2 border-foreground px-3 py-1.5">24,100 reviewed</span>
+                <span className="border-2 border-foreground bg-foreground px-3 py-1.5 text-background">528,728 prisoners</span>
                 <FunnelArrow delay={0} />
+                <span className="border-2 border-foreground px-3 py-1.5">24,100 reviewed</span>
+                <FunnelArrow delay={0.2} />
                 <span className="border-2 border-foreground px-3 py-1.5">15,777 recommended</span>
-                <FunnelArrow delay={0.25} />
+                <FunnelArrow delay={0.4} />
                 <span className="border-2 border-foreground px-3 py-1.5">12,395 filed</span>
-                <FunnelArrow delay={0.5} />
+                <FunnelArrow delay={0.6} />
                 <span className="border-2 border-accent bg-accent px-3 py-1.5 text-white">7,421 released</span>
               </div>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                <p className="border-l-4 border-accent pl-3 font-mono text-xs text-foreground/70 uppercase">
+                  Leak 1 — ~3,400 recommendations never became filings
+                </p>
+                <p className="border-l-4 border-accent pl-3 font-mono text-xs text-foreground/70 uppercase">
+                  Leak 2 — ~1,750 bail grants never became releases, mostly for want of surety
+                </p>
+              </div>
               <p className="mt-4 font-mono text-xs text-foreground/60 uppercase">
-                Every drop is a separate failure. ~3,400 recommendations never became filings. ~1,750 people
-                granted bail never left prison — overwhelmingly for want of surety.
+                Identification is not the bottleneck. Filing and release are.
+              </p>
+            </motion.div>
+
+            <motion.div variants={fadeUp} className="mt-3 border-2 border-foreground bg-foreground p-5 text-background">
+              <Label>
+                <span className="text-background/60">Why now</span>
+              </Label>
+              <p className="mt-2 font-display text-lg leading-tight uppercase sm:text-xl">
+                NALSA proved systematic review works for convicts in May 2026.{" "}
+                <span className="text-accent">It has never been applied to undertrials.</span>
               </p>
             </motion.div>
           </div>
@@ -312,6 +335,53 @@ export function Showcase() {
         </motion.section>
       </main>
     </MotionConfig>
+  );
+}
+
+function DemoSignInPanel({ accounts }: { accounts: PublicDemoAccount[] }) {
+  return (
+    <motion.div
+      id="demo"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: EASE, delay: 0.3 }}
+      className="mt-10 border-2 border-accent bg-panel"
+    >
+      <div className="flex flex-wrap items-center gap-2 border-b-2 border-accent bg-accent px-4 py-2 text-white">
+        <span className="font-display text-sm tracking-tight uppercase">Judges &amp; evaluators — sign in here</span>
+        <span className="ml-auto font-mono text-[10px] tracking-widest uppercase opacity-90">
+          Synthetic + public data only
+        </span>
+      </div>
+      <div className="grid gap-px bg-foreground/20 sm:grid-cols-3">
+        {accounts.map((a) => (
+          <div key={a.barEnrolmentNo} className="flex flex-col gap-3 bg-panel p-4">
+            <div>
+              <p className="font-display text-base uppercase">{a.roleLabel}</p>
+              <p className="mt-1 font-mono text-[11px] text-foreground/60">{a.sees}</p>
+            </div>
+            <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-xs">
+              <dt className="text-foreground/50 uppercase">Username</dt>
+              <dd className="font-bold break-all select-all">{a.barEnrolmentNo}</dd>
+              <dt className="text-foreground/50 uppercase">Password</dt>
+              <dd className="font-bold break-all select-all">{a.password}</dd>
+              <dt className="text-foreground/50 uppercase">OTP</dt>
+              <dd className="text-foreground/70">auto-filled</dd>
+            </dl>
+            <Link
+              href={`/login?as=${encodeURIComponent(a.barEnrolmentNo)}`}
+              className="mt-auto border-2 border-foreground bg-foreground px-3 py-2 text-center font-mono text-xs tracking-widest text-background uppercase transition-colors hover:border-accent hover:bg-accent"
+            >
+              Sign in as {a.roleLabel} →
+            </Link>
+          </div>
+        ))}
+      </div>
+      <p className="border-t-2 border-foreground/20 px-4 py-2 font-mono text-[10px] leading-relaxed text-foreground/60 uppercase">
+        Username is the Bar Council enrolment number. The OTP step still runs — it is only pre-filled for
+        these three accounts. Real lawyer accounts receive it by SMS.
+      </p>
+    </motion.div>
   );
 }
 

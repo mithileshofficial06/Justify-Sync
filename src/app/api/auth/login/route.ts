@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth/password";
 import { generateOtpCode, hashOtpCode, otpExpiryDate, sendOtpSms } from "@/lib/auth/otp";
 import { logAudit } from "@/lib/audit";
+import { DEMO_OTP, isDemoAccount, isDemoMode } from "@/lib/demo";
 
 const LOCKOUT_THRESHOLD = 5;
 const LOCKOUT_MINUTES = 15;
@@ -39,7 +40,11 @@ export async function POST(request: NextRequest) {
     return genericFailure();
   }
 
-  if (user.lockedUntil && user.lockedUntil > new Date()) {
+  // A mistyped password on stage must not lock the judge out. Scoped to the
+  // three seeded demo accounts and only while DEMO_MODE is on.
+  const demoLogin = isDemoMode() && isDemoAccount(user.barEnrolmentNo);
+
+  if (!demoLogin && user.lockedUntil && user.lockedUntil > new Date()) {
     await logAudit({ actorUserId: user.id, action: "login_blocked_locked", entity: "User", entityId: user.id, ipAddress });
     return NextResponse.json(
       { error: `Account locked until ${user.lockedUntil.toISOString()} after repeated failed attempts.` },
@@ -56,6 +61,11 @@ export async function POST(request: NextRequest) {
   }
 
   const passwordOk = await verifyPassword(user.passwordHash, password);
+
+  if (!passwordOk && demoLogin) {
+    await logAudit({ actorUserId: user.id, action: "login_failed_bad_password_demo", entity: "User", entityId: user.id, ipAddress });
+    return genericFailure();
+  }
 
   if (!passwordOk) {
     const failedAttempts = user.failedLoginAttempts + 1;
@@ -81,7 +91,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Password correct — issue OTP, reset failure counter.
-  const otpCode = generateOtpCode();
+  const otpCode = demoLogin ? DEMO_OTP : generateOtpCode();
   const otpCodeHash = await hashOtpCode(otpCode);
 
   await db.user.update({
@@ -93,6 +103,11 @@ export async function POST(request: NextRequest) {
       otpExpiresAt: otpExpiryDate(),
     },
   });
+
+  if (demoLogin) {
+    await logAudit({ actorUserId: user.id, action: "login_otp_demo_autofill", entity: "User", entityId: user.id, ipAddress });
+    return NextResponse.json({ message: "OTP issued.", userId: user.id, demoOtp: otpCode });
+  }
 
   await sendOtpSms(user.mobileNumber, otpCode);
   await logAudit({ actorUserId: user.id, action: "login_otp_sent", entity: "User", entityId: user.id, ipAddress });

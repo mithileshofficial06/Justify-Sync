@@ -14,6 +14,7 @@
     "test:watch": "vitest",
     "db:seed": "tsx prisma/seed.ts",
     "db:bootstrap-admin": "tsx prisma/bootstrapAdmin.ts",
+    "db:seed-demo-accounts": "tsx prisma/seedDemoAccounts.ts",
     "db:seed-demo": "tsx prisma/seedDemoCases.ts"
   },
   "dependencies": {
