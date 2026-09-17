@@ -6,6 +6,10 @@
   --accent: #ff3b1f;
   --border: #141414;
   --panel: #ffffff;
+  /* Who produced a piece of information: AI reading, fixed rules deciding, a lawyer signing. */
+  --ai: #2a55d6;
+  --rules: #141414;
+  --lawyer: #1d7a3e;
 }
 
 @theme inline {
@@ -14,6 +18,9 @@
   --color-accent: var(--accent);
   --color-border: var(--border);
   --color-panel: var(--panel);
+  --color-ai: var(--ai);
+  --color-rules: var(--rules);
+  --color-lawyer: var(--lawyer);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-archivo-black);
@@ -26,6 +33,9 @@
     --accent: #ff4a2e;
     --border: #f0eee6;
     --panel: #1c1c1c;
+    --ai: #7d9dff;
+    --rules: #f0eee6;
+    --lawyer: #4cc27a;
   }
 }
 

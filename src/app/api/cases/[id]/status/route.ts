@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
 import { logAudit } from "@/lib/audit";
+import { computeCase } from "@/lib/caseCompute";
 
 const statusSchema = z.object({
   status: z.enum(["FILED", "HEARD", "BAIL_GRANTED", "RELEASED"]),
@@ -43,16 +44,37 @@ export async function PATCH(
   }
 
   const { status } = parsed.data;
+  const now = new Date();
+
+  // Outcome statuses change the facts Track B reads: a released person must
+  // drop off the surety-failure list, and a recorded bail order starts its clock.
+  const outcome =
+    status === "RELEASED"
+      ? { custodyStatus: "released" }
+      : status === "BAIL_GRANTED"
+        ? { bailGranted: true, bailOrderDate: dbCase.bailOrderDate ?? now }
+        : {};
+
+  const NOTE: Record<typeof status, string> = {
+    FILED: "Release application marked as filed by counsel",
+    HEARD: "Hearing recorded by counsel",
+    BAIL_GRANTED: "Bail order recorded by counsel",
+    RELEASED: "Release confirmed by counsel",
+  };
 
   const [updatedCase] = await db.$transaction([
     db.case.update({
       where: { id },
-      data: { caseStatus: status, statusUpdatedAt: new Date() },
+      data: { caseStatus: status, statusUpdatedAt: now, ...outcome },
     }),
     db.caseStatusEvent.create({
-      data: { caseId: id, status, setByUserId: session.userId, source: "LAWYER" },
+      data: { caseId: id, status, setByUserId: session.userId, source: "LAWYER", note: NOTE[status], eventTime: now },
     }),
   ]);
+
+  if (status === "RELEASED" || status === "BAIL_GRANTED") {
+    await computeCase(id).catch((error) => console.error(`[status] recompute after ${status} failed for ${id}:`, error));
+  }
 
   await logAudit({
     actorUserId: session.userId,
