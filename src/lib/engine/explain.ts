@@ -28,6 +28,8 @@ export interface ExplainInput {
   overdueDays: number | null;
   arrestDate: Date;
   arrestDateIsProxy?: boolean;
+  custodyAsOf?: Date | null;
+  priorConvictionsSynthetic?: boolean;
 }
 
 export interface DerivationLine {
@@ -139,7 +141,7 @@ export function explainDecision(input: ExplainInput): Derivation {
 
   lines.push({
     label: "Prior conviction",
-    value: fraction === "1/3" ? "none on record" : "previously convicted",
+    value: `${fraction === "1/3" ? "none on record" : "previously convicted"}${input.priorConvictionsSynthetic ? " [synthetic value]" : ""}`,
     note: `applicable fraction = ${fraction}`,
   });
 
@@ -156,7 +158,9 @@ export function explainDecision(input: ExplainInput): Derivation {
   lines.push({
     label: "Days in custody",
     value: formatDays(input.daysInCustody),
-    note: `${input.arrestDateIsProxy ? "earliest recorded date" : "arrested"} ${formatDateDMY(input.arrestDate)}, continuous`,
+    note: `${input.arrestDateIsProxy ? "earliest recorded date" : "arrested"} ${formatDateDMY(input.arrestDate)}, continuous${
+      input.custodyAsOf ? `, counted to dataset snapshot ${formatDateDMY(input.custodyAsOf)}` : ""
+    }`,
   });
 
   const met = input.tier !== null;

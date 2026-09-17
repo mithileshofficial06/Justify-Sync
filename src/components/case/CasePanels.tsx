@@ -55,6 +55,8 @@ export interface FactRow {
 
 function confidenceTag(f: FactRow) {
   if (f.method === "MANUAL_OVERRIDE") return { text: "Asserted by lawyer · not from a document", className: "border-lawyer text-lawyer" };
+  if (f.method === "COURT_METADATA") return { text: "From public court metadata · not AI", className: "border-lawyer text-lawyer" };
+  if (f.method === "SYNTHETIC_ASSUMPTION") return { text: "Synthetic value · court metadata has no such field", className: "border-accent text-accent" };
   if (f.confidence < 0.7) return { text: `Low confidence ${f.confidence.toFixed(1)} · passes disagreed — not used`, className: "border-accent text-accent" };
   if (f.method === "PRECOMPUTED_FIXTURE")
     return { text: `High confidence ${f.confidence.toFixed(1)} · pre-computed, passes live grounding check`, className: "border-ai text-ai" };
@@ -67,6 +69,19 @@ export function FactsPanel({ facts }: { facts: FactRow[] }) {
   const shown = [...latest.values()];
   const missing = EXPECTED_FIELDS.filter((field) => !latest.has(field));
   const fixtureOnly = shown.length > 0 && shown.every((f) => f.method === "PRECOMPUTED_FIXTURE");
+  const noDocument = shown.length > 0 && shown.every((f) => f.method === "COURT_METADATA" || f.method === "SYNTHETIC_ASSUMPTION");
+
+  if (noDocument) {
+    return (
+      <ActorPanel actor="RULES" title="Where the facts came from" tag={<ActorTag actor="RULES">Court metadata · no AI</ActorTag>}>
+        <p className="mb-4 font-mono text-[11px] leading-relaxed text-foreground/70">
+          This case was loaded from public court metadata, not read from a document. Every value says whether it came
+          from the court record or is a labelled synthetic stand-in for a field court metadata does not contain.
+        </p>
+        <FactList facts={shown} />
+      </ActorPanel>
+    );
+  }
 
   return (
     <ActorPanel actor="AI" title="What was read from the document" tag={<ActorTag actor="AI">AI read · grounded</ActorTag>}>
@@ -75,27 +90,7 @@ export function FactsPanel({ facts }: { facts: FactRow[] }) {
         off mid-sentence, or is hedged (&ldquo;however&hellip; awaited&rdquo;) is discarded — never guessed.
         {fixtureOnly && " For this demo case the reading was pre-computed, so no live AI call is needed."}
       </p>
-      {shown.length === 0 ? (
-        <p className="font-mono text-xs text-foreground/50 uppercase">No facts extracted yet.</p>
-      ) : (
-        <ul className="flex flex-col gap-3">
-          {shown.map((f) => {
-            const tag = confidenceTag(f);
-            return (
-              <li key={f.id} className="border-2 border-dashed border-ai/60 bg-background p-3">
-                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                  <span className="font-mono text-[10px] tracking-widest text-foreground/55 uppercase">{FIELD_LABEL[f.fieldName] ?? f.fieldName}</span>
-                  <span className="font-mono text-sm font-bold">{f.undecryptable ? "—" : humanValue(f.fieldName, f.value)}</span>
-                  <span className={`ml-auto border px-1.5 py-0.5 font-mono text-[9px] tracking-wide uppercase ${tag.className}`}>{tag.text}</span>
-                </div>
-                <blockquote className="mt-2 border-l-4 border-ai/60 pl-3 font-serif text-[13px] leading-relaxed text-foreground/80 italic">
-                  &ldquo;{f.sourceSentence}&rdquo;
-                </blockquote>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      {shown.length === 0 ? <p className="font-mono text-xs text-foreground/50 uppercase">No facts extracted yet.</p> : <FactList facts={shown} />}
       {missing.length > 0 && (
         <div className="mt-4 border-2 border-accent/60 bg-background p-3">
           <p className="font-mono text-[10px] font-bold tracking-widest text-accent uppercase">Could not be grounded</p>
@@ -109,6 +104,28 @@ export function FactsPanel({ facts }: { facts: FactRow[] }) {
         </div>
       )}
     </ActorPanel>
+  );
+}
+
+function FactList({ facts }: { facts: FactRow[] }) {
+  return (
+    <ul className="flex flex-col gap-3">
+      {facts.map((f) => {
+        const tag = confidenceTag(f);
+        return (
+          <li key={f.id} className="border-2 border-dashed border-ai/60 bg-background p-3">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span className="font-mono text-[10px] tracking-widest text-foreground/55 uppercase">{FIELD_LABEL[f.fieldName] ?? f.fieldName}</span>
+              <span className="font-mono text-sm font-bold">{f.undecryptable ? "—" : humanValue(f.fieldName, f.value)}</span>
+              <span className={`ml-auto border px-1.5 py-0.5 font-mono text-[9px] tracking-wide uppercase ${tag.className}`}>{tag.text}</span>
+            </div>
+            <blockquote className="mt-2 border-l-4 border-ai/60 pl-3 font-serif text-[13px] leading-relaxed text-foreground/80 italic">
+              &ldquo;{f.sourceSentence}&rdquo;
+            </blockquote>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 

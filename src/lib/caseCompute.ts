@@ -83,7 +83,8 @@ export async function computeCase(caseId: string) {
     // or the ranked list query would still show it as eligible.
     await db.formulaResult.deleteMany({ where: { caseId } });
   } else {
-    const custodyDays = daysInCustody(dbCase.arrestDate);
+    // A dataset snapshot cannot say someone is still inside today, so its custody stops at the snapshot date.
+    const custodyDays = daysInCustody(dbCase.arrestDate, dbCase.custodyAsOf ?? new Date());
     if (caseInput.priorConvictions === null) {
       // Should be unreachable — checkExclusions returns needs_human_review
       // for a null priorConvictions, which is filtered out above. Fail loud

@@ -16,7 +16,9 @@
     "db:bootstrap-admin": "tsx prisma/bootstrapAdmin.ts",
     "db:seed-demo-accounts": "tsx prisma/seedDemoAccounts.ts",
     "db:seed-sih": "tsx prisma/seedSih.ts",
-    "db:seed-demo": "tsx prisma/seedSih.ts"
+    "db:seed-demo": "tsx prisma/seedSih.ts",
+    "data:prepare-ddl": "tsx scripts/prepareDdlSlice.ts",
+    "data:load-ecourts": "tsx prisma/loadCourtData.ts"
   },
   "dependencies": {
     "@prisma/client": "6.19.3",

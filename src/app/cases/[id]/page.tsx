@@ -22,6 +22,7 @@ const FACT_METHOD_LABEL: Record<string, string> = {
   AI_DOUBLE_PASS: "AI extraction, grounded, both passes agreed",
   PRECOMPUTED_FIXTURE: "pre-computed extraction, grounded",
   MANUAL_OVERRIDE: "lawyer's manual confirmation",
+  SYNTHETIC_ASSUMPTION: "synthetic value — not in court metadata",
 };
 
 export default async function CaseDetailPage(props: PageProps<"/cases/[id]">) {
@@ -123,6 +124,8 @@ export default async function CaseDetailPage(props: PageProps<"/cases/[id]">) {
             computedAt={fr.computedAt}
             arrestDate={c.arrestDate}
             arrestDateIsProxy={c.arrestDateIsProxy}
+            custodyAsOf={c.custodyAsOf}
+            priorConvictionsSynthetic={priorsFact?.method === "SYNTHETIC_ASSUMPTION"}
             arrestDateProxyNote={c.arrestDateProxyNote}
             priorConvictionsSource={priorsFact ? FACT_METHOD_LABEL[priorsFact.method] ?? priorsFact.method : null}
           />

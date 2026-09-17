@@ -13,6 +13,8 @@ export interface ArithmeticPanelProps {
   computedAt: Date;
   arrestDate: Date;
   arrestDateIsProxy: boolean;
+  custodyAsOf: Date | null;
+  priorConvictionsSynthetic: boolean;
   arrestDateProxyNote: string | null;
   priorConvictionsSource: string | null;
 }
@@ -28,6 +30,8 @@ export function ArithmeticPanel(props: ArithmeticPanelProps) {
     overdueDays: props.overdueDays,
     arrestDate: props.arrestDate,
     arrestDateIsProxy: props.arrestDateIsProxy,
+    custodyAsOf: props.custodyAsOf,
+    priorConvictionsSynthetic: props.priorConvictionsSynthetic,
   });
 
   const verdictClass =
@@ -126,7 +130,10 @@ export function ArithmeticPanel(props: ArithmeticPanelProps) {
         </div>
         <div>
           <dt className="inline uppercase">Computed: </dt>
-          <dd className="inline">{formatDateDMY(props.computedAt)} (custody counted to that day)</dd>
+          <dd className="inline">
+            {formatDateDMY(props.computedAt)}{" "}
+            {props.custodyAsOf ? `(custody counted to the ${formatDateDMY(props.custodyAsOf)} snapshot)` : "(custody counted to that day)"}
+          </dd>
         </div>
         <div>
           <dt className="inline uppercase">Rounding: </dt>

@@ -99,6 +99,24 @@ describe("explainDecision — edge categories", () => {
     });
     expect(d.lines.find((l) => l.label === "Days in custody")!.note).toMatch(/^earliest recorded date/);
   });
+
+  it("says custody was counted to a dataset snapshot, not to today", () => {
+    const d = explainDecision({
+      chargedSections: [IPC_325],
+      governingSection: IPC_325,
+      applicableFraction: 1 / 2,
+      thresholdDays: 1278,
+      daysInCustody: 1300,
+      tier: 2,
+      overdueDays: 22,
+      arrestDate: new Date(Date.UTC(2015, 0, 5)),
+      arrestDateIsProxy: true,
+      custodyAsOf: new Date(Date.UTC(2018, 7, 1)),
+    });
+    expect(d.lines.find((l) => l.label === "Days in custody")!.note).toBe(
+      "earliest recorded date 05-01-2015, continuous, counted to dataset snapshot 01-08-2018"
+    );
+  });
 });
 
 describe("describeTerm", () => {

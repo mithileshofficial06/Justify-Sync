@@ -14,7 +14,7 @@ export interface FactToStore {
   value: string;
   sourceSentence: string;
   confidence: number;
-  method?: "AI_DOUBLE_PASS" | "PRECOMPUTED_FIXTURE" | "MANUAL_OVERRIDE";
+  method?: "AI_DOUBLE_PASS" | "PRECOMPUTED_FIXTURE" | "MANUAL_OVERRIDE" | "SYNTHETIC_ASSUMPTION" | "COURT_METADATA";
   reviewedById?: string;
 }
 

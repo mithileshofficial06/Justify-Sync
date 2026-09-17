@@ -166,6 +166,7 @@ model Case {
   sourceRef         String?         // eCourts CNR / DDL case id / synthetic fixture key
   arrestDateIsProxy Boolean         @default(false) // true when the arrest date was absent and a proxy date was used
   arrestDateProxyNote String?
+  custodyAsOf       DateTime?       // set for dataset snapshots: custody is counted to this date, never to today
   custodySource     CustodySource   @default(SIMULATED)
   fixtureKey        String?         @unique // set only on rows the seed scripts own, so re-seeding is idempotent
 
