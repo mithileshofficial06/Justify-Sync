@@ -5,6 +5,7 @@ import { getNeedsReviewCases } from "@/lib/queries/needsReview";
 import { formatDays } from "@/lib/engine/explain";
 import { DataSourceBadge } from "@/components/case/Provenance";
 import { Label, H1 } from "@/components/ui";
+import { Stagger, StaggerItem } from "@/components/motion/Motion";
 
 type Row = Awaited<ReturnType<typeof getNeedsReviewCases>>[number];
 
@@ -82,11 +83,11 @@ export default async function NeedsReviewPage() {
             {rows.length === 0 ? (
               <p className="font-mono text-xs text-foreground/40 uppercase">None right now.</p>
             ) : (
-              <ul className="flex flex-col gap-2">
+              <Stagger as="ul" className="flex flex-col gap-2">
                 {rows.map((c) => (
                   <ReviewRow key={c.caseId} c={c} outcome={g.outcome} showDistrict={showDistrict} />
                 ))}
-              </ul>
+              </Stagger>
             )}
           </section>
         );
@@ -95,11 +96,11 @@ export default async function NeedsReviewPage() {
       {uncategorised.length > 0 && (
         <section className="mb-8">
           <h2 className="mb-2 border-b-2 border-foreground pb-2 font-display text-lg uppercase">Not yet recomputed ({uncategorised.length})</h2>
-          <ul className="flex flex-col gap-2">
+          <Stagger as="ul" className="flex flex-col gap-2">
             {uncategorised.map((c) => (
               <ReviewRow key={c.caseId} c={c} outcome="held" showDistrict={showDistrict} />
             ))}
-          </ul>
+          </Stagger>
         </section>
       )}
     </main>
@@ -108,7 +109,7 @@ export default async function NeedsReviewPage() {
 
 function ReviewRow({ c, outcome, showDistrict }: { c: Row; outcome: keyof typeof OUTCOME_LABEL; showDistrict: boolean }) {
   return (
-    <li>
+    <StaggerItem as="li">
       <Link href={`/cases/${c.caseId}`} className="group block border-2 border-foreground bg-panel p-3 transition-colors hover:border-accent">
         <div className="flex flex-wrap items-center gap-2">
           <p className="font-display text-sm uppercase group-hover:text-accent">{c.personName}</p>
@@ -130,6 +131,6 @@ function ReviewRow({ c, outcome, showDistrict }: { c: Row; outcome: keyof typeof
         </p>
         {c.exclusionReason && <p className="mt-1 font-mono text-[11px] leading-relaxed text-foreground/80">{c.exclusionReason}</p>}
       </Link>
-    </li>
+    </StaggerItem>
   );
 }

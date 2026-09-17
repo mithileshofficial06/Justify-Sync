@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { FUNNEL_STAGES, getStateOverview, type FunnelCounts } from "@/lib/queries/stateOverview";
 import { Label, H1 } from "@/components/ui";
+import { GrowBar, Reveal } from "@/components/motion/Motion";
 
 function pct(n: number | null) {
   return n === null ? "—" : `${Math.round(n * 100)}%`;
@@ -26,7 +27,7 @@ export default async function StateOverviewPage() {
         Counts cover cases this system tracks, not the total prison population.
       </p>
 
-      <section className="mb-8 border-2 border-foreground bg-panel p-4">
+      <Reveal><section className="mb-8 border-2 border-foreground bg-panel p-4">
         <div className="mb-3 flex flex-wrap items-baseline gap-2">
           <h2 className="font-display text-lg uppercase">All districts</h2>
           <span className="ml-auto font-mono text-[10px] tracking-widest text-foreground/60 uppercase">
@@ -37,9 +38,9 @@ export default async function StateOverviewPage() {
         <p className="mt-3 font-mono text-[10px] text-foreground/55 uppercase">
           National, Jan–Mar 2024: 15,777 recommended → 12,395 filed (79%) → 7,421 released (60% of filed)
         </p>
-      </section>
+      </section></Reveal>
 
-      <div className="mb-8 overflow-x-auto border-2 border-foreground">
+      <Reveal delay={0.1}><div className="mb-8 overflow-x-auto border-2 border-foreground">
         <table className="w-full min-w-[760px] text-sm">
           <thead>
             <tr className="border-b-2 border-foreground bg-foreground text-left font-mono text-[10px] tracking-widest text-background uppercase">
@@ -78,7 +79,7 @@ export default async function StateOverviewPage() {
             </tr>
           </tbody>
         </table>
-      </div>
+      </div></Reveal>
 
       <div className="grid gap-4 md:grid-cols-3">
         {districts.map((d) => (
@@ -105,7 +106,7 @@ function Funnel({ funnel, large }: { funnel: FunnelCounts; large?: boolean }) {
           <li key={s.key} className="grid grid-cols-[6.5rem_1fr_auto] items-center gap-2 font-mono text-[11px]">
             <span className="text-foreground/65 uppercase">{s.label}</span>
             <div className={`border border-foreground/30 ${large ? "h-5" : "h-3"}`}>
-              <div className={`h-full ${last ? "bg-accent" : "bg-foreground"}`} style={{ width: `${(value / top) * 100}%` }} />
+              <GrowBar pct={(value / top) * 100} className="h-full" barClassName={last ? "bg-accent" : "bg-foreground"} delay={i * 0.12} />
             </div>
             <span className="w-16 text-right">
               <span className="font-bold">{value}</span>

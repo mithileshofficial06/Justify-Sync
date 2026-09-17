@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { H1, Label, Button } from "@/components/ui";
 import type { PublicDemoAccount } from "@/lib/demo";
@@ -98,6 +99,8 @@ export function LoginForm({
             </li>
           </ol>
 
+          <AnimatePresence mode="wait">
+          <motion.div key={step} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.25 }}>
           {step === "credentials" ? (
             <form onSubmit={submitCredentials} className="flex flex-col gap-4">
               <label className="flex flex-col gap-1">
@@ -180,6 +183,8 @@ export function LoginForm({
               </button>
             </form>
           )}
+          </motion.div>
+          </AnimatePresence>
         </div>
 
         {step === "credentials" && demoAccounts.length > 0 && (

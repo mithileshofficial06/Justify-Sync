@@ -5,6 +5,7 @@ import { getStalledCases, type StalledCase } from "@/lib/queries/stalled";
 import type { EscalationTrigger } from "@/lib/engine/escalation";
 import { formatDateDMY, formatDays } from "@/lib/engine/explain";
 import { Label, H1 } from "@/components/ui";
+import { GrowBar, Stagger, StaggerItem } from "@/components/motion/Motion";
 
 const GROUPS: { trigger: EscalationTrigger; title: string; leak: string; limit: string }[] = [
   {
@@ -82,11 +83,11 @@ export default async function StalledPage() {
             {rows.length === 0 ? (
               <p className="font-mono text-xs text-foreground/40 uppercase">None right now.</p>
             ) : (
-              <ul className="flex flex-col gap-2">
+              <Stagger as="ul" className="flex flex-col gap-2">
                 {rows.map((s) => (
                   <StalledRow key={s.caseId} s={s} showDistrict={session.role === "STATE_ADMIN"} />
                 ))}
-              </ul>
+              </Stagger>
             )}
           </section>
         );
@@ -99,7 +100,7 @@ function StalledRow({ s, showDistrict }: { s: StalledCase; showDistrict: boolean
   const over = s.daysStuck - s.limitDays;
   const pct = Math.min(100, Math.round((s.limitDays / s.daysStuck) * 100));
   return (
-    <li>
+    <StaggerItem as="li">
       <Link href={`/cases/${s.caseId}`} className="group block border-2 border-accent bg-panel p-3 transition-colors hover:bg-accent/5">
         <div className="grid grid-cols-[1fr_auto] items-start gap-3">
           <div className="min-w-0">
@@ -118,13 +119,13 @@ function StalledRow({ s, showDistrict }: { s: StalledCase; showDistrict: boolean
         </div>
         <div className="mt-2 flex items-center gap-2">
           <div className="relative h-2 flex-1 border border-foreground/40 bg-accent">
-            <div className="absolute inset-y-0 left-0 bg-foreground/25" style={{ width: `${pct}%` }} />
+            <GrowBar pct={pct} className="absolute inset-y-0 left-0 w-full" barClassName="bg-foreground/25" delay={0.2} />
           </div>
           <span className="font-mono text-[10px] whitespace-nowrap text-foreground/65 uppercase">
             limit {s.limitDays} · {formatDays(over)} over
           </span>
         </div>
       </Link>
-    </li>
+    </StaggerItem>
   );
 }
