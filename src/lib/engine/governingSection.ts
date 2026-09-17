@@ -3,6 +3,9 @@ import type { Section } from "./types";
 /**
  * v5 Stage 5: if multiple sections are charged, the governing section is
  * whichever carries the highest maximum sentence — a fixed rule, not AI.
+ * A death/life-eligible section always governs: its maxSentenceDays is not a
+ * term of years, so comparing raw day counts would let e.g. IPC 323 (365
+ * days) outrank IPC 302 and silently skip the §479 carve-out.
  */
 export function getGoverningSection(
   chargedSectionIds: string[],
@@ -20,7 +23,6 @@ export function getGoverningSection(
     return section;
   });
 
-  return sections.reduce((highest, current) =>
-    current.maxSentenceDays > highest.maxSentenceDays ? current : highest
-  );
+  const severity = (s: Section) => (s.isDeathOrLife ? Number.POSITIVE_INFINITY : s.maxSentenceDays);
+  return sections.reduce((highest, current) => (severity(current) > severity(highest) ? current : highest));
 }

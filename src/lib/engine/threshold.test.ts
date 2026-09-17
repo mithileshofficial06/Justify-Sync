@@ -45,6 +45,19 @@ describe("classifyTier — worked examples from the spec (v4 §3)", () => {
     expect(result.overdueDays).toBeNull();
   });
 
+  it("fine-only offence: any day in custody is beyond the maximum (Tier 1), no crash or default", () => {
+    const fineOnly: Section = { id: "IPC_290", code: "290", law: "IPC", maxSentenceDays: 0, isDeathOrLife: false, isFineOnly: true };
+    const result = classifyTier(45, fineOnly, false);
+    expect(result.tier).toBe(1);
+    expect(result.thresholdDays).toBe(0);
+    expect(result.overdueDays).toBe(45);
+  });
+
+  it("refuses to compute from a zero maximum that is not marked fine-only", () => {
+    const broken: Section = { ...SECTION_325_IPC, maxSentenceDays: 0 };
+    expect(() => classifyTier(45, broken, false)).toThrow(/no custodial maximum/);
+  });
+
   it("general rule (prior conviction) uses 1/2, not 1/3", () => {
     const result = classifyTier(1140, SECTION_325_IPC, true);
     expect(result.applicableFraction).toBeCloseTo(1 / 2);

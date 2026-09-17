@@ -60,6 +60,26 @@ describe("checkExclusions", () => {
     ).toBe("stricter_scrutiny");
   });
 
+  it("flags stricter scrutiny when the governing section itself is a special act", () => {
+    expect(checkExclusions(baseCase, { ...normalSection, isSpecialAct: true }).status).toBe("stricter_scrutiny");
+  });
+
+  it("routes a graded section with an unestablished, life-carrying band to human review, not exclusion", () => {
+    const ipc304Generic: Section = { ...normalSection, id: "IPC_304", isDeathOrLife: true, isGraded: true, gradedBand: null };
+    expect(checkExclusions(baseCase, ipc304Generic).status).toBe("needs_human_review");
+  });
+
+  it("still excludes a graded section once the life-carrying band is established", () => {
+    const ipc304PartI: Section = { ...normalSection, id: "IPC_304_PART_I", isDeathOrLife: true, isGraded: true, gradedBand: "Part I" };
+    expect(checkExclusions(baseCase, ipc304PartI).status).toBe("excluded");
+  });
+
+  it("routes a juvenile to the JJ Act even when the offence is life-eligible", () => {
+    const result = checkExclusions({ ...baseCase, isJuvenile: true }, lifeSection);
+    expect(result.status).toBe("excluded");
+    expect("reason" in result && result.reason).toMatch(/Juvenile Justice Act/);
+  });
+
   it("clears an ordinary case with none of the above", () => {
     expect(checkExclusions(baseCase, normalSection).status).toBe("clear");
   });

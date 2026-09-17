@@ -11,6 +11,12 @@ export function applicableFraction(priorConvictions: boolean): number {
   return priorConvictions ? 1 / 2 : 1 / 3;
 }
 
+export function thresholdFor(maxSentenceDays: number, fraction: number): number {
+  // Rounded up, not down: spec's own worked example (325 IPC, 2,555 days,
+  // 1/3) gives a threshold of 852 days, not 851 (2555/3 = 851.67).
+  return Math.ceil(maxSentenceDays * fraction);
+}
+
 /**
  * Tier 1 (full term served) always outranks Tier 2 (threshold met) —
  * the most egregious cohort: detained beyond any sentence they could
@@ -22,10 +28,28 @@ export function classifyTier(
   priorConvictions: boolean
 ): FormulaResult {
   const fraction = applicableFraction(priorConvictions);
+
+  // A fine-only offence has no custodial maximum: any day in custody already
+  // exceeds the longest sentence the court could impose.
+  if (governingSection.isFineOnly) {
+    return {
+      governingSectionId: governingSection.id,
+      applicableFraction: fraction,
+      thresholdDays: 0,
+      daysInCustody: daysInCustodyCount,
+      tier: daysInCustodyCount > 0 ? 1 : null,
+      overdueDays: daysInCustodyCount > 0 ? daysInCustodyCount : null,
+      remainingDays: daysInCustodyCount > 0 ? null : 0,
+    };
+  }
+
   const maxSentenceDays = governingSection.maxSentenceDays;
-  // Rounded up, not down: spec's own worked example (325 IPC, 2,555 days,
-  // 1/3) gives a threshold of 852 days, not 851 (2555/3 = 851.67).
-  const thresholdDays = Math.ceil(maxSentenceDays * fraction);
+  if (!(maxSentenceDays > 0)) {
+    throw new Error(
+      `Section ${governingSection.id} has no custodial maximum and is not marked fine-only — refusing to compute a threshold from ${maxSentenceDays} days.`
+    );
+  }
+  const thresholdDays = thresholdFor(maxSentenceDays, fraction);
 
   let tier: Tier;
   let overdueDays: number | null = null;

@@ -4,6 +4,14 @@ export interface Section {
   law: "IPC" | "BNS" | string;
   maxSentenceDays: number;
   isDeathOrLife: boolean;
+  /** Punishment depends on facts (Part I/II, quantity, time of day), not the section number alone. */
+  isGraded?: boolean;
+  /** Which band this row represents; null on a graded row means the band is not established. */
+  gradedBand?: string | null;
+  /** No custodial sentence is possible at all. */
+  isFineOnly?: boolean;
+  /** NDPS / UAPA / PMLA / POCSO / MCOCA-type statute — stricter scrutiny, never auto-excluded. */
+  isSpecialAct?: boolean;
 }
 
 export interface CaseInput {
