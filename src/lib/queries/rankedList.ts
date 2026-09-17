@@ -10,7 +10,7 @@ export async function getRankedList(session: SessionClaims) {
   // in the funnel statistics, never on the worklist.
   const stillInside = { custodyStatus: "in_custody", caseStatus: { not: "RELEASED" as const } };
 
-  const [trackACases, trackBFlags, scanned, bySource, district] = await Promise.all([
+  const [trackACases, trackBFlags, scanned, bySource, district, user, notYet, review] = await Promise.all([
     db.case.findMany({
       where: {
         ...districtFilter,
@@ -32,6 +32,9 @@ export async function getRankedList(session: SessionClaims) {
     db.case.count({ where: { ...districtFilter, ...stillInside } }),
     db.case.groupBy({ by: ["dataSource"], where: { ...districtFilter, ...stillInside }, _count: true }),
     session.districtId ? db.district.findUnique({ where: { id: session.districtId } }) : null,
+    db.user.findUnique({ where: { id: session.userId }, select: { fullName: true } }),
+    db.case.count({ where: { ...districtFilter, ...stillInside, exclusionStatus: "CLEAR", formulaResult: { tier: null } } }),
+    db.case.count({ where: { ...districtFilter, exclusionStatus: { in: ["NEEDS_HUMAN_REVIEW", "STRICTER_SCRUTINY"] } } }),
   ]);
 
   const ecourtsDatasets = await db.case.findMany({
@@ -98,6 +101,9 @@ export async function getRankedList(session: SessionClaims) {
     trackB,
     header: {
       districtName: session.role === "STATE_ADMIN" ? "All districts" : (district?.name ?? "—"),
+      userName: user?.fullName ?? null,
+      notYet,
+      review,
       scanned,
       eligible: trackA.length,
       tier1: trackA.filter((c) => c.tier === 1).length,
