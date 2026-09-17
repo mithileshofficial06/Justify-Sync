@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local DB backups written by seed scripts (contain personal data ciphertext)
+.backups/
