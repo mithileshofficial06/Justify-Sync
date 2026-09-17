@@ -5,6 +5,7 @@
  *
  * Usage: npm run db:seed-demo-accounts
  */
+import { randomBytes } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../src/lib/auth/password";
 import { DEMO_ACCOUNTS } from "../src/lib/demo";
@@ -45,6 +46,27 @@ async function main() {
     });
     console.log(`  ${account.roleLabel.padEnd(15)} ${account.barEnrolmentNo}  /  ${account.password}`);
   }
+
+  // Registrations for the District Admin to approve or reject on stage. They
+  // cannot log in (random passwords) and re-running resets them to pending.
+  const pendingLawyers = [
+    { barEnrolmentNo: "TN/2231/2021", fullName: "Adv. Priya Venkatesan", email: "pending.priya@jurisync.demo", mobileNumber: "+910000000011", daysAgo: 2 },
+    { barEnrolmentNo: "TN/0874/2019", fullName: "Adv. Farhan Ali", email: "pending.farhan@jurisync.demo", mobileNumber: "+910000000012", daysAgo: 5 },
+  ];
+  for (const p of pendingLawyers) {
+    const data = {
+      fullName: p.fullName,
+      role: "LAWYER" as const,
+      districtId: PILOT_DISTRICT_ID,
+      email: p.email,
+      mobileNumber: p.mobileNumber,
+      passwordHash: await hashPassword(randomBytes(24).toString("base64")),
+      status: "PENDING_VERIFICATION" as const,
+      createdAt: new Date(Date.now() - p.daysAgo * 86_400_000),
+    };
+    await prisma.user.upsert({ where: { barEnrolmentNo: p.barEnrolmentNo }, update: data, create: { barEnrolmentNo: p.barEnrolmentNo, ...data } });
+  }
+  console.log(`  ${pendingLawyers.length} pending lawyer registrations for the District Admin to review`);
 
   console.log("\nDemo accounts ready. Set DEMO_MODE=\"true\" for OTP auto-fill and the landing-page panel.");
 }
