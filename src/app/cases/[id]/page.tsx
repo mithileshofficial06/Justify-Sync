@@ -11,6 +11,7 @@ import { ArithmeticPanel } from "@/components/case/ArithmeticPanel";
 import { CustodyPanel, DecisionFlow, DraftsPanel, FactsPanel, StatusTimeline } from "@/components/case/CasePanels";
 import { ActorPanel, ActorTag, ArrestProxyBadge, CustodySourceBadge, DataSourceBadge } from "@/components/case/Provenance";
 import { Label, H1, Badge } from "@/components/ui";
+import { Reveal } from "@/components/motion/Motion";
 
 const EXCLUSION_LABEL = {
   CLEAR: "Clear",
@@ -78,7 +79,7 @@ export default async function CaseDetailPage(props: PageProps<"/cases/[id]">) {
         </p>
       </header>
 
-      <DecisionFlow />
+      <Reveal><DecisionFlow /></Reveal>
 
       {c.exclusionStatus === "EXCLUDED" || c.exclusionStatus === "NEEDS_HUMAN_REVIEW" ? (
         <ActorPanel
@@ -158,17 +159,17 @@ export default async function CaseDetailPage(props: PageProps<"/cases/[id]">) {
         </ActorPanel>
       )}
 
-      <FactsPanel facts={c.extractedFacts} />
+      <Reveal><FactsPanel facts={c.extractedFacts} /></Reveal>
 
-      <CustodyPanel custodyStatus={c.custodyStatus} custodySource={c.custodySource} bailGranted={c.bailGranted} bailOrderDate={c.bailOrderDate} />
+      <Reveal><CustodyPanel custodyStatus={c.custodyStatus} custodySource={c.custodySource} bailGranted={c.bailGranted} bailOrderDate={c.bailOrderDate} /></Reveal>
 
       {inPipeline && (
-        <DraftsPanel drafts={c.applications}>
+        <Reveal><DraftsPanel drafts={c.applications}>
           <StatusActions caseId={c.id} caseStatus={c.caseStatus} canUpdate={session.role === "LAWYER"} eligible={ranked || Boolean(tb)} />
-        </DraftsPanel>
+        </DraftsPanel></Reveal>
       )}
 
-      <StatusTimeline events={c.statusEvents} currentStatus={c.caseStatus} daysSince={daysSince(c.statusUpdatedAt)} />
+      <Reveal><StatusTimeline events={c.statusEvents} currentStatus={c.caseStatus} daysSince={daysSince(c.statusUpdatedAt)} /></Reveal>
 
       {c.potentialMatches.length > 0 && (
         <section className="border-2 border-accent bg-panel p-4">

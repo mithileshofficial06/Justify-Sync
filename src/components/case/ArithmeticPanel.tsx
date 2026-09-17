@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { explainDecision, formatDays, formatDateDMY, type ExplainSection } from "@/lib/engine/explain";
 import { ActorPanel, ActorTag } from "./Provenance";
+import { AnimatedDerivation, CustodyMeter, OrderingBars } from "./AnimatedDerivation";
 
 export interface ArithmeticPanelProps {
   chargedSections: (ExplainSection & { id: string })[];
@@ -41,7 +42,6 @@ export function ArithmeticPanel(props: ArithmeticPanelProps) {
         ? "bg-foreground text-background border-foreground"
         : "bg-background text-foreground border-foreground";
 
-  const labelWidth = Math.max(...d.lines.map((l) => l.label.length)) + 2;
 
   return (
     <ActorPanel actor="RULES" title="The arithmetic" tag={<ActorTag actor="RULES">Fixed rule · no AI</ActorTag>}>
@@ -50,25 +50,16 @@ export function ArithmeticPanel(props: ArithmeticPanelProps) {
         Same inputs, same answer, every time.
       </p>
 
-      <div className="overflow-x-auto border-2 border-foreground bg-background">
-        <pre className="min-w-max p-4 font-mono text-[13px] leading-7 sm:text-sm">
-          {d.lines.map((l) => (
-            <div key={l.label}>
-              <span className="text-foreground/55">{`${l.label}:`.padEnd(labelWidth)}</span>
-              <span className="font-bold">{l.value}</span>
-              {l.note && <span className="text-foreground/55">{`   (${l.note})`}</span>}
-            </div>
-          ))}
-          <div className="my-2 border-t border-dashed border-foreground/40" />
-          <div className="text-base font-bold sm:text-lg">
-            {d.comparison.left}  {d.comparison.operator}  {d.comparison.right}
-          </div>
-        </pre>
-      </div>
+      {!props.governingSection.isFineOnly && (
+        <CustodyMeter days={props.daysInCustody} threshold={props.thresholdDays} max={props.governingSection.maxSentenceDays} tone={d.verdictTone} />
+      )}
 
-      <div className={`mt-3 border-2 px-4 py-3 font-display text-lg leading-tight uppercase sm:text-xl ${verdictClass}`}>
-        → {d.verdict}
-      </div>
+      <AnimatedDerivation
+        lines={d.lines}
+        comparison={`${d.comparison.left}  ${d.comparison.operator}  ${d.comparison.right}`}
+        verdict={d.verdict}
+        verdictClass={verdictClass}
+      />
 
       {d.verdictTone === "tier1" && (
         <p className="mt-2 font-mono text-xs text-accent uppercase">
@@ -93,18 +84,7 @@ export function ArithmeticPanel(props: ArithmeticPanelProps) {
           <p className="font-mono text-[10px] font-bold tracking-widest text-accent uppercase">
             Why the order of the steps matters (v4 Flaw #20)
           </p>
-          <div className="mt-2 grid gap-2 font-mono text-sm sm:grid-cols-2">
-            <div className="border-2 border-foreground p-3">
-              <p className="text-[10px] text-foreground/60 uppercase">Correct: fraction chosen first (1/3)</p>
-              <p className="mt-1 text-2xl font-bold">{formatDays(d.orderingCheck.correctOverdueDays)} days overdue</p>
-            </div>
-            <div className="border-2 border-foreground/30 p-3 text-foreground/60">
-              <p className="text-[10px] uppercase">Wrong: 1/2 limb tested first</p>
-              <p className="mt-1 text-2xl font-bold line-through decoration-accent">
-                {formatDays(d.orderingCheck.wrongOverdueDays)} days overdue
-              </p>
-            </div>
-          </div>
+          <OrderingBars correct={d.orderingCheck.correctOverdueDays} wrong={d.orderingCheck.wrongOverdueDays} />
           <p className="mt-2 font-mono text-[11px] leading-relaxed text-foreground/75">
             A first-time offender is entitled to be measured against one-third. If the one-half limb were tested
             before the fraction was chosen, the threshold would be {formatDays(d.orderingCheck.wrongThresholdDays)} days
