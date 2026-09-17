@@ -127,8 +127,8 @@ Defined in [`prisma/schema.prisma`](prisma/schema.prisma):
 ### Prerequisites
 - Node.js 20+
 - A [Supabase](https://supabase.com) Postgres project (or any Postgres instance)
-- An NVIDIA NIM API key ([free tier](https://build.nvidia.com)) for AI extraction/drafting
-- A [Resend](https://resend.com) API key for email (optional in dev — logs a warning instead of failing if unset)
+- Optional: an NVIDIA NIM API key ([free tier](https://build.nvidia.com)) for live extraction/drafting — without it, drafts use deterministic templates and the demo data uses pre-computed readings
+- Optional: a [Resend](https://resend.com) API key for email — without it, emails are logged instead of sent
 
 ### Setup
 
@@ -136,20 +136,39 @@ Defined in [`prisma/schema.prisma`](prisma/schema.prisma):
 git clone https://github.com/mithileshofficial06/Justify-Sync.git
 cd Justify-Sync
 npm install
-cp .env.example .env   # fill in the values — see comments in the file for gotchas
-npx prisma migrate deploy
-npm run db:bootstrap-admin   # creates the first District Admin from BOOTSTRAP_ADMIN_* env vars
+cp .env.example .env            # fill in the values — see comments in the file for gotchas
+npx prisma db push              # create the tables
+npm run db:seed                 # districts + statutory knowledge base (KB-2026.09)
+npm run db:seed-demo-accounts   # three demo logins + two pending lawyer registrations
+npm run db:seed-sih             # the demo dataset, run through the real engine
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000). With `DEMO_MODE="true"` the landing page shows the demo sign-in panel.
 
-To explore with realistic data instead of an empty database:
+### Evaluating JuriSync (demo accounts)
+
+| Role | Username (Bar Council no.) | Password | Sees |
+|---|---|---|---|
+| DLSA Lawyer | `TN/1234/2015` | `JuriSync@Demo1` | Chennai ranked worklist, case files, drafts |
+| District Admin | `TN/5678/2009` | `JuriSync@Demo2` | Chennai worklist + pending lawyer approvals |
+| State Admin | `TN/9012/2004` | `JuriSync@Demo3` | Per-district funnel across Tamil Nadu |
+
+The OTP step is never skipped. While `DEMO_MODE` is on, it is auto-filled for these three accounts only, and they cannot be locked out. Every other account gets a random OTP by SMS and the normal lockout. See [docs/SIH_DEMO.md](docs/SIH_DEMO.md) for the click path and acceptance results.
+
+### Loading real court metadata
 
 ```bash
-npm run db:seed          # statutory knowledge base + pilot district
-npm run db:seed-demo      # synthetic charge sheets run through the real extraction/compute/draft pipeline
+# 1. Cut one district out of the Development Data Lab judicial dataset (public eCourts metadata)
+npm run data:prepare-ddl -- --cases cases_2018.csv --acts acts_sections.csv \
+  --act-key act_key.csv --section-key section_key.csv --state <code> --district <code> \
+  --snapshot 2018-12-31 --out data/slice.csv
+
+# 2. Load it and run the engine over every case
+npm run data:load-ecourts -- --file data/slice.csv --dataset "DDL Judicial Data 2018" [--priors synthetic-none]
 ```
+
+The loader prints loaded/skipped counts and which sections blocked the most cases. Custody is counted to the dataset's snapshot date, never to today. Court metadata has no prior-conviction field, so those cases go to review unless `--priors synthetic-none` records a clearly labelled synthetic value.
 
 ### Scripts
 
@@ -158,16 +177,21 @@ npm run db:seed-demo      # synthetic charge sheets run through the real extract
 | `npm run dev` | Start the dev server (Turbopack) |
 | `npm run build` / `npm run start` | Production build / start |
 | `npm run lint` | ESLint |
-| `npm test` / `npm run test:watch` | Run Vitest suite (engine, AI grounding, crypto, entity resolution) |
-| `npm run db:seed` | Seed the statutory knowledge base + pilot district |
-| `npm run db:bootstrap-admin` | Create the first District Admin |
-| `npm run db:seed-demo` | Seed synthetic charge sheets end-to-end through extraction, compute, and drafting |
+| `npm test` / `npm run test:watch` | Vitest suite (engine, explainability, knowledge base, seed dataset, court data, AI grounding, crypto, entity resolution) |
+| `npm run db:seed` | Districts + statutory knowledge base |
+| `npm run db:seed-demo-accounts` | Demo Lawyer / District Admin / State Admin accounts and pending registrations |
+| `npm run db:seed-sih` (alias `db:seed-demo`) | Demo dataset through the real pipeline; add `-- --live-ai` to use the model, `-- --purge-undecryptable` to back up and remove cases encrypted under a lost key |
+| `npm run db:bootstrap-admin` | Create a real first District Admin from `BOOTSTRAP_ADMIN_*` env vars |
+| `npm run data:prepare-ddl` | Extract a district slice from the DDL judicial dataset |
+| `npm run data:load-ecourts` | Load a court-metadata slice and compute every case |
+| `npm run test:demo-path` | Walk the demo click path in a headless browser against a running server |
 
 ## Security notes
 
 - The eligibility engine (`src/lib/engine/`) has zero dependency on the AI client — an eligibility decision can never be silently influenced by an LLM.
 - `ENCRYPTION_KEY` is load-bearing for reading previously-stored data — treat it like a database credential, never rotate it casually (see `.env.example`).
-- Cron endpoints require a `CRON_SECRET` bearer token, not a user session.
+- Cron endpoints require a `CRON_SECRET` bearer token, not a user session. They accept GET (what Vercel Cron sends) and POST.
+- `DEMO_MODE` only affects the three seeded demo accounts. Turn it off for any deployment holding real data.
 - Every session JWT is scoped to a `role` and `districtId`; district-scoped queries filter on it server-side, not just in the UI.
 
 ## Project structure
@@ -182,10 +206,13 @@ src/
       jobs/            daily-sweep, data-retention (cron)
   components/          React components (dashboard, case actions, showcase, nav)
   lib/
-    engine/            Pure eligibility rules — no DB, no AI, unit-tested
-    ai/                LLM client, grounded extraction, drafting
+    engine/            Pure eligibility rules and the explain step — no DB, no AI, unit-tested
+    ai/                LLM client, grounded extraction, drafting, draft templates
     auth/              Password hashing, JWT, OTP, session helpers
+    courtData/         Court-metadata slice parsing and mapping
+    jobs/              Daily sweep (recompute, identify, escalate, digest)
     queries/           District-scoped read models for each dashboard
+    demo.ts            Demo accounts, gated by DEMO_MODE
     crypto.ts           AES-256-GCM field encryption
     extractedFactStore.ts  Centralized encrypted read/write for extracted facts
     entityResolution.ts     Jaro-Winkler name matching
@@ -193,7 +220,12 @@ src/
     audit.ts            Audit log writer
     notifications/      Email delivery
 prisma/
-  schema.prisma        Data model
-  migrations/          SQL migrations
-  seed.ts, seedDemoCases.ts, bootstrapAdmin.ts   Seed scripts
+  schema.prisma        Data model (applied with prisma db push)
+  seedData/            Knowledge base (sections.ts) and demo dataset (sihCases.ts), both tested
+  seed.ts, seedDemoAccounts.ts, seedSih.ts, loadCourtData.ts, bootstrapAdmin.ts
+scripts/
+  prepareDdlSlice.ts   Streams a district out of the DDL dataset
+  acceptance/          Headless demo click-path check
+docs/
+  SIH_DEMO.md          Demo click path, acceptance results, remaining manual steps
 ```

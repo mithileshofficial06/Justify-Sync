@@ -18,7 +18,8 @@
     "db:seed-sih": "tsx prisma/seedSih.ts",
     "db:seed-demo": "tsx prisma/seedSih.ts",
     "data:prepare-ddl": "tsx scripts/prepareDdlSlice.ts",
-    "data:load-ecourts": "tsx prisma/loadCourtData.ts"
+    "data:load-ecourts": "tsx prisma/loadCourtData.ts",
+    "test:demo-path": "node scripts/acceptance/demoPath.mjs"
   },
   "dependencies": {
     "@prisma/client": "6.19.3",
@@ -41,6 +42,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.3",
+    "puppeteer-core": "^23.11.1",
     "tailwindcss": "^4",
     "tsx": "^4.23.12",
     "typescript": "^5",

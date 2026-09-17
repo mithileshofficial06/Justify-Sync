@@ -43,3 +43,6 @@ next-env.d.ts
 
 # local DB backups written by seed scripts (contain personal data ciphertext)
 .backups/
+
+# screenshots from npm run test:demo-path
+.demo-shots/
