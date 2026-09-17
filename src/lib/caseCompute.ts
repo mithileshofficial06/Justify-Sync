@@ -22,7 +22,17 @@ export async function computeCase(caseId: string) {
   const knowledgeBase = new Map<string, Section>(
     sections.map((s) => [
       s.id,
-      { id: s.id, code: s.code, law: s.law, maxSentenceDays: s.maxSentenceDays, isDeathOrLife: s.isDeathOrLife },
+      {
+        id: s.id,
+        code: s.code,
+        law: s.law,
+        maxSentenceDays: s.maxSentenceDays,
+        isDeathOrLife: s.isDeathOrLife,
+        isGraded: s.isGraded,
+        gradedBand: s.gradedBand,
+        isFineOnly: s.isFineOnly,
+        isSpecialAct: s.isSpecialAct,
+      },
     ])
   );
 
@@ -45,7 +55,8 @@ export async function computeCase(caseId: string) {
     priorConvictions,
     isJuvenile: dbCase.isJuvenile,
     pendingCaseFlag: dbCase.pendingCaseFlag.toLowerCase() as CaseInput["pendingCaseFlag"],
-    specialActFlag: dbCase.specialActFlag,
+    // A special act anywhere in the charges triggers scrutiny, even if an IPC section governs.
+    specialActFlag: dbCase.specialActFlag || sections.some((s) => s.isSpecialAct),
     custodyStatus: dbCase.custodyStatus as CaseInput["custodyStatus"],
     bailGranted: dbCase.bailGranted,
     bailOrderDate: dbCase.bailOrderDate,

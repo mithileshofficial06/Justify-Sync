@@ -57,6 +57,20 @@ enum StatusSource {
   LAWYER
 }
 
+// Where a case's facts came from — shown as a badge on every row (SIH Module 3/6).
+enum DataSource {
+  SYNTHETIC_CHARGE_SHEET
+  ECOURTS_METADATA
+  MANUAL_ENTRY
+}
+
+// e-Prisons is the authoritative custody source; until institutional access is
+// granted every custody status is simulated, and says so (v4 Flaw #9).
+enum CustodySource {
+  SIMULATED
+  EPRISONS
+}
+
 // --- v5 §5: DLSA lawyer authentication ---
 model User {
   id            String     @id @default(uuid())
@@ -109,9 +123,15 @@ model KnowledgeBaseSection {
   id              String  @id // e.g. "IPC_325", "BNS_117_2"
   code            String
   law             String  // "IPC" | "BNS" | state act name
+  title           String  @default("")
+  punishment      String  @default("") // statutory punishment, in words
   maxSentenceDays Int
   isDeathOrLife   Boolean @default(false)
   isGraded        Boolean @default(false)
+  gradedBand      String? // null on a graded row = band not established from the record
+  isFineOnly      Boolean @default(false)
+  isSpecialAct    Boolean @default(false)
+  equivalentId    String? // IPC <-> BNS correspondence, e.g. IPC_325 <-> BNS_117_2
   version         String
   citation        String?
   notes           String?
@@ -139,6 +159,14 @@ model Case {
 
   caseStatus        CaseStatus      @default(IDENTIFIED)
   statusUpdatedAt   DateTime        @default(now())
+
+  dataSource        DataSource      @default(MANUAL_ENTRY)
+  sourceDataset     String?         // e.g. "DDL Judicial Data, Chennai district slice"
+  sourceRef         String?         // eCourts CNR / DDL case id / synthetic fixture key
+  arrestDateIsProxy Boolean         @default(false) // true when the arrest date was absent and a proxy date was used
+  arrestDateProxyNote String?
+  custodySource     CustodySource   @default(SIMULATED)
+  fixtureKey        String?         @unique // set only on rows the seed scripts own, so re-seeding is idempotent
 
   createdAt         DateTime        @default(now())
 
@@ -213,6 +241,7 @@ model CaseStatusEvent {
   setByUserId  String?
   setByUser    User?        @relation(fields: [setByUserId], references: [id])
   source       StatusSource
+  note         String?
   eventTime    DateTime     @default(now())
 
   @@index([caseId])

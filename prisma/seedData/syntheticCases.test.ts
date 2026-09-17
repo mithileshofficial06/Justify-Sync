@@ -6,12 +6,7 @@ import type { CaseInput, Section } from "../../src/lib/engine/types";
 import { sections } from "./sections";
 import { buildSyntheticCases } from "./syntheticCases";
 
-const kb = new Map<string, Section>(
-  sections.map((s) => [
-    s.id,
-    { id: s.id, code: s.code, law: s.law, maxSentenceDays: s.maxSentenceDays, isDeathOrLife: s.isDeathOrLife },
-  ])
-);
+const kb = new Map<string, Section>(sections.map((s) => [s.id, s]));
 
 /**
  * What a CORRECT extraction of each synthetic charge sheet should produce
@@ -26,7 +21,7 @@ const perfectExtractionByKey: Record<string, { sectionId: string; priorConvictio
   "tier2-prior-conviction": { sectionId: "IPC_420", priorConvictions: true },
   "tier1-full-term": { sectionId: "IPC_379", priorConvictions: false },
   "not-yet-eligible": { sectionId: "IPC_411", priorConvictions: false },
-  "stricter-scrutiny-ndps": { sectionId: "NDPS_21", priorConvictions: false },
+  "stricter-scrutiny-ndps": { sectionId: "NDPS_21_B", priorConvictions: false },
   "needs-review-unclear-priors": { sectionId: "IPC_325", priorConvictions: null },
   "excluded-juvenile": { sectionId: "IPC_379", priorConvictions: false },
 };
